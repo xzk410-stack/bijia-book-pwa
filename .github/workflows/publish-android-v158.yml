@@ -1,0 +1,37 @@
+name: Publish Android v1.5.8
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/publish-android-v158.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download built APK artifact
+        run: |
+          curl -L --fail --retry 3 -o bijiabu-v1.5.8.zip 'https://sdmntprjapaneast.oaiusercontent.com/files/00000000-44d0-8209-9b2f-a122bb9a4c8b/raw?se=2026-08-27T17%3A58%3A49Z&sp=r&sv=2026-02-06&sr=b&scid=2a48dc57-e690-56ad-8400-dfd6c8df046f&skoid=fe2e0858-51c5-47e9-acb7-46ebb9a0f396&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-08-27T03%3A12%3A57Z&ske=2026-08-28T03%3A12%3A57Z&sks=b&skv=2026-02-06&sig=SACGiteOuNP7uhzQt6A/JwH3gx5boEDQ0DbAq/u%2BYVA%3D'
+          unzip -o bijiabu-v1.5.8.zip
+          test -f bijiabu-v1.5.8.apk
+          echo '2fc9f775419ba964ada54fd61b10a5008925562d93238d0fc2a8e1466b901535  bijiabu-v1.5.8.apk' | sha256sum -c -
+
+      - name: Publish public Android release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG='android-v1.5.8'
+          APK='bijiabu-v1.5.8.apk'
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" --clobber
+          else
+            gh release create "$TAG" "$APK" \
+              --title '比價簿 Android v1.5.8' \
+              --notes '公開分享版 Android APK｜移除圖示黑框'
+          fi
