@@ -17,7 +17,7 @@ jobs:
 
       - name: Download built APK artifact
         run: |
-          curl -L --fail --retry 3 -o bijiabu-v1.5.7.zip 'https://sdmntprjapaneast.oaiusercontent.com/files/00000000-3f04-8209-a3eb-5b9ac4f53cf1/raw?se=2026-08-27T17%3A11%3A28Z&sp=r&sv=2026-02-06&sr=b&scid=ab4cf518-723e-5906-94a8-b99145edd34a&skoid=b1bca990-dcac-4c31-8ca1-ac563cf24c54&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-08-27T03%3A56%3A55Z&ske=2026-08-28T03%3A56%3A55Z&sks=b&skv=2026-02-06&sig=VCAN4L2WhkbtjhopgDTUA2H/BCEIQ1CeSRHrVeOm2YI%3D'
+          curl -L --fail --retry 3 -o bijiabu-v1.5.7.zip 'https://sdmntprjapaneast.oaiusercontent.com/files/00000000-35bc-8209-89d8-c250a874bcb7/raw?se=2026-08-27T17%3A37%3A46Z&sp=r&sv=2026-02-06&sr=b&scid=0200c101-2727-5b02-823f-a32dfa38e940&skoid=fe2e0858-51c5-47e9-acb7-46ebb9a0f396&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-08-27T04%3A12%3A23Z&ske=2026-08-28T04%3A12%3A23Z&sks=b&skv=2026-02-06&sig=oCcT4vNeLQRaMKWsm%2BEWU%2BrCqouQ1SnYmpOnaF2n2/o%3D'
           unzip -o bijiabu-v1.5.7.zip
           test -f bijiabu-v1.5.7.apk
           echo 'd71e08b1a8fc7bab4ebe65f1af774013e2aed3cd178f4c65690d6a4f5b460e7c  bijiabu-v1.5.7.apk' | sha256sum -c -
