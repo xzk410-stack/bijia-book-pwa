@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#FFF8F1">
+  <title>比價簿｜下載與安裝</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;background:linear-gradient(180deg,#fffaf5 0%,#fff4ec 100%);color:#493b35;min-height:100vh}
+    .wrap{max-width:640px;margin:0 auto;padding:42px 20px 56px}
+    .hero{text-align:center;margin-bottom:28px}
+    .badge{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid #f1ddd0;font-size:13px;color:#9a6d58;box-shadow:0 5px 18px rgba(115,77,56,.06)}
+    h1{font-size:34px;line-height:1.15;margin:18px 0 10px;letter-spacing:-1px}
+    .lead{margin:0 auto;color:#826f65;line-height:1.7;font-size:15px;max-width:470px}
+    .card{background:rgba(255,255,255,.92);border:1px solid #f0dfd5;border-radius:26px;padding:22px;margin:16px 0;box-shadow:0 12px 36px rgba(100,67,49,.08)}
+    .platform{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+    .icon{width:48px;height:48px;display:grid;place-items:center;border-radius:16px;background:#fff1e8;font-size:25px}
+    .platform h2{font-size:20px;margin:0 0 3px}
+    .sub{font-size:13px;color:#9b867a}
+    .btn{display:flex;align-items:center;justify-content:center;text-decoration:none;width:100%;min-height:54px;border-radius:17px;font-weight:750;font-size:16px;margin-top:14px;transition:.15s transform}
+    .btn:active{transform:scale(.985)}
+    .android{background:#d97861;color:white;box-shadow:0 8px 20px rgba(217,120,97,.22)}
+    .iphone{background:#665b75;color:white;box-shadow:0 8px 20px rgba(102,91,117,.18)}
+    .steps{margin:15px 0 0;padding:0;list-style:none;counter-reset:item;color:#74635b;font-size:14px;line-height:1.65}
+    .steps li{position:relative;padding-left:28px;margin:7px 0;counter-increment:item}
+    .steps li:before{content:counter(item);position:absolute;left:0;top:2px;width:19px;height:19px;border-radius:50%;display:grid;place-items:center;background:#f4e5dc;color:#8d6250;font-size:11px;font-weight:700}
+    .note{margin-top:22px;padding:15px 17px;border-radius:18px;background:#fff8e9;border:1px solid #f1e1bc;color:#7c6846;font-size:13px;line-height:1.65}
+    .version{text-align:center;color:#ad9b91;font-size:12px;margin-top:24px}
+    @media(max-width:420px){.wrap{padding-top:30px}h1{font-size:30px}.card{padding:19px;border-radius:23px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="badge">🔎 比價簿・朋友分享版</div>
+      <h1>選你的手機就可以用</h1>
+      <p class="lead">Android 可以直接安裝 App；iPhone 不用 App Store，用 Safari 加到主畫面就能像 App 一樣開啟。</p>
+    </section>
+
+    <section class="card">
+      <div class="platform">
+        <div class="icon">🤖</div>
+        <div><h2>Android</h2><div class="sub">原生 App ・ v1.5.7</div></div>
+      </div>
+      <a class="btn android" href="https://github.com/xzk410-stack/bijia-book-pwa/releases/download/android-v1.5.7/bijiabu-v1.5.7.apk">下載 Android APK</a>
+      <ol class="steps">
+        <li>下載完成後，點 APK 檔案安裝。</li>
+        <li>若手機詢問「允許安裝未知應用程式」，依系統提示允許這次安裝即可。</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <div class="platform">
+        <div class="icon">🍎</div>
+        <div><h2>iPhone</h2><div class="sub">免 App Store ・ 加入主畫面</div></div>
+      </div>
+      <a class="btn iphone" href="./">開啟 iPhone 版比價簿</a>
+      <ol class="steps">
+        <li>請用 Safari 開啟比價簿。</li>
+        <li>點 Safari 下方或上方的「分享」按鈕。</li>
+        <li>選「加入主畫面」→「加入」。</li>
+      </ol>
+    </section>
+
+    <div class="note">💡 每個人的資料會存在自己的手機／瀏覽器裡，不會因為使用同一個分享連結就互相看到資料。</div>
+    <div class="version">比價簿 Android v1.5.7 ・ iPhone PWA</div>
+  </main>
+</body>
+</html>
