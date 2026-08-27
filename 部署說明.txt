@@ -1,0 +1,25 @@
+比價簿 iPhone PWA 1.4.4
+
+這個資料夾是可以安裝到 iPhone 主畫面的 PWA 網站。
+
+功能
+・價格歷史、最低價、平均價、價格曲線
+・包裝單位換算
+・多條碼商品
+・iPhone 相機掃條碼（使用 html5-qrcode）
+・條碼公開資料庫查詢
+・JSON / CSV 備份
+・iPhone 分享選單備份，可選「儲存到檔案」放進 iCloud Drive
+・離線 App 外殼快取
+
+重要
+1. PWA 必須放在 HTTPS 網址，直接雙擊本機 index.html 無法啟用完整的相機與安裝功能。
+2. iPhone 請用 Safari 開啟網站。
+3. Safari → 分享 → 加入主畫面。
+4. 商品與價格資料存在該網站在 iPhone 上的本機儲存空間；仍建議定期匯出 JSON 到 iCloud Drive。
+5. 網路比價、Open Food Facts 商品查詢需要網路。
+6. 掃碼元件第一次使用需載入網路套件；之後 Service Worker 會嘗試快取。
+
+部署最簡單的方式
+・將整個資料夾部署到任何支援 HTTPS 的靜態網站空間。
+・例如 Netlify / Cloudflare Pages / GitHub Pages（是否可用取決於帳號與 repository 設定）。
