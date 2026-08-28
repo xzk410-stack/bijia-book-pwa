@@ -1,0 +1,12 @@
+{
+  "name":"旅伴｜正式完整版",
+  "short_name":"旅伴",
+  "description":"旅行、收藏、每日行程、票券、行李、購物、支出與同行共享",
+  "id":"./",
+  "start_url":"./index.html",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#fffaf6",
+  "theme_color":"#356859",
+  "icons":[{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
