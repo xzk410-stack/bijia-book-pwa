@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>我的工具箱</title>
+  <meta name="theme-color" content="#fff8f4" />
+  <style>
+    :root{
+      --bg1:#fffaf7;
+      --bg2:#f8fcfb;
+      --card:#ffffffee;
+      --line:#eadfd7;
+      --text:#2f2a28;
+      --muted:#7c726d;
+      --accent:#d97861;
+      --accent2:#356859;
+      --soft:#fff1e9;
+      --soft2:#edf6f2;
+      --warn:#fff7e8;
+      --warnText:#876846;
+      --shadow:0 14px 36px rgba(94,72,60,.08);
+      --radius:24px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;
+      color:var(--text);
+      background:linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 100%);
+      min-height:100vh;
+    }
+    a{color:inherit}
+    .wrap{max-width:1100px;margin:0 auto;padding:28px 18px 54px}
+    .hero{
+      background:rgba(255,255,255,.78);
+      border:1px solid #f0e3db;
+      border-radius:32px;
+      padding:28px 22px;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(10px);
+    }
+    .tag{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 13px;border-radius:999px;
+      background:#fff;border:1px solid #f0e4db;
+      color:#9a6d58;font-size:13px;font-weight:700;
+    }
+    h1{margin:16px 0 8px;font-size:38px;line-height:1.12;letter-spacing:-1px}
+    .lead{margin:0;color:var(--muted);line-height:1.75;font-size:15px;max-width:760px}
+    .tip{margin-top:16px;padding:13px 15px;border-radius:18px;background:var(--warn);color:var(--warnText);font-size:13px;line-height:1.65;border:1px solid #f0e1bf}
+    .sec{margin-top:28px}
+    .sec h2{font-size:20px;margin:0 0 12px}
+    .sub{font-size:13px;color:var(--muted);margin:0 0 14px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+      display:flex;flex-direction:column;gap:12px;
+    }
+    .top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .icon{
+      width:52px;height:52px;border-radius:18px;display:grid;place-items:center;
+      font-size:26px;flex:0 0 auto;
+      background:var(--soft);
+    }
+    .icon.green{background:var(--soft2)}
+    .title{font-size:19px;font-weight:800;line-height:1.25;margin:0}
+    .desc{font-size:14px;line-height:1.7;color:var(--muted);margin:0}
+    .badge{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;
+      white-space:nowrap;border:1px solid transparent;
+    }
+    .ok{background:#eaf7f0;color:#2f7656;border-color:#d8ecdf}
+    .wait{background:#f5f3f2;color:#7a6f69;border-color:#e6dfdb}
+    .tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}
+    .btn{
+      appearance:none;border:0;text-decoration:none;cursor:pointer;
+      min-height:42px;padding:11px 14px;border-radius:15px;font-size:14px;font-weight:800;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      transition:.15s transform,.15s opacity;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn:active{transform:scale(.985)}
+    .primary{background:var(--accent);color:#fff;box-shadow:0 10px 22px rgba(217,120,97,.22)}
+    .secondary{background:#fff;color:var(--text);border:1px solid var(--line)}
+    .ghost{background:#eef3f1;color:#45675d}
+    .disabled{background:#f5f1ef;color:#9f938d;cursor:not-allowed}
+    .small{font-size:12px;color:var(--muted);line-height:1.65}
+    .footer{
+      margin-top:30px;padding:16px 18px;border-radius:20px;
+      background:rgba(255,255,255,.7);border:1px solid #eee1d8;
+      color:var(--muted);font-size:13px;line-height:1.7;
+    }
+    .mini-list{display:grid;gap:10px}
+    .mini-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:16px;background:#fff;border:1px solid #eee2da}
+    .mini-name{font-weight:750}
+    @media (max-width:640px){
+      .wrap{padding:18px 14px 44px}
+      .hero{padding:22px 18px;border-radius:26px}
+      h1{font-size:31px}
+      .grid{grid-template-columns:1fr}
+      .mini-item{align-items:flex-start;flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="tag">🧰 我的工具箱・總入口</div>
+      <h1>你做過的工具，<br>全部收在這裡。</h1>
+      <p class="lead">之後不用再翻對話、不用再找網址，也不用跟過去的自己玩躲貓貓。這頁把目前能直接使用的 App、安裝入口、下載頁，以及還在整理中的工具一起收好。</p>
+      <div class="tip">💡 小提醒：建議把這頁加入書籤或加到手機主畫面。這樣之後要開旅伴、比價簿，或回頭找其他工具，都只要從這一頁進去就行。</div>
+    </section>
+
+    <section class="sec">
+      <h2>✅ 目前可直接使用</h2>
+      <p class="sub">這些是現在能直接點開的正式入口。</p>
+      <div class="grid">
+        <article class="card">
+          <div class="top">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div class="icon">🔎</div>
+              <div>
+                <h3 class="title">比價簿</h3>
+                <p class="desc">記錄商品價格、價格歷史、最低價、平均價與包裝換算，也能用來做日常比價整理。</p>
+              </div>
+            </div>
+            <span class="badge ok">正式版</span>
+          </div>
+          <div class="tools">
+            <a class="btn primary" href="https://xzk410-stack.github.io/bijia-book-pwa/" target="_blank" rel="noopener">開啟比價簿</a>
+            <a class="btn secondary" href="https://xzk410-stack.github.io/bijia-book-pwa/download.html" target="_blank" rel="noopener">安裝／下載</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="top">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div class="icon green">🧳</div>
+              <div>
+                <h3 class="title">旅伴</h3>
+                <p class="desc">旅行規劃與共享工具，可管理行程、想去地點、票券、購物、行李與同行協作。</p>
+              </div>
+            </div>
+            <span class="badge ok">正式版</span>
+          </div>
+          <div class="tools">
+            <a class="btn primary" href="https://xzk410-stack.github.io/bijia-book-pwa/travelmate/" target="_blank" rel="noopener">開啟旅伴</a>
+            <a class="btn secondary" href="https://xzk410-stack.github.io/bijia-book-pwa/travelmate/app/" target="_blank" rel="noopener">直接進入 App</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="top">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div class="icon">🤖</div>
+              <div>
+                <h3 class="title">比價簿 Android APK</h3>
+                <p class="desc">如果是 Android 手機，可以直接下載安裝 APK。適合想要像一般 App 一樣使用的人。</p>
+              </div>
+            </div>
+            <span class="badge ok">v1.5.8</span>
+          </div>
+          <div class="tools">
+            <a class="btn primary" href="https://github.com/xzk410-stack/bijia-book-pwa/releases/download/android-v1.5.8/bijiabu-v1.5.8.apk" target="_blank" rel="noopener">下載 APK</a>
+            <a class="btn secondary" href="https://github.com/xzk410-stack/bijia-book-pwa/releases/tag/android-v1.5.8" target="_blank" rel="noopener">版本頁</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="sec">
+      <h2>🛠️ 已做出來，準備整理上線</h2>
+      <p class="sub">這些工具你已經有檔案或功能版本，只是目前還沒有固定公開網址。</p>
+      <div class="grid">
+        <article class="card">
+          <div class="top">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div class="icon">💼</div>
+              <div>
+                <h3 class="title">月底付款管理</h3>
+                <p class="desc">整合應付帳款、付款方式、支票簽收單、大宗掛號、現金簽收、歷史查詢與匯出功能。</p>
+              </div>
+            </div>
+            <span class="badge wait">整理中</span>
+          </div>
+          <div class="small">包含你常用的大宗掛號建單、支票簽收單、應付憑單等功能。</div>
+          <div class="tools">
+            <button class="btn disabled" type="button">尚未公開網址</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="top">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div class="icon green">🚢</div>
+              <div>
+                <h3 class="title">出口文件生成器</h3>
+                <p class="desc">用來處理出口文件製作，屬於最新建立的工具版本，後續可再做成固定入口。</p>
+              </div>
+            </div>
+            <span class="badge wait">整理中</span>
+          </div>
+          <div class="tools">
+            <button class="btn disabled" type="button">尚未公開網址</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="top">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div class="icon">📌</div>
+              <div>
+                <h3 class="title">收藏雷達</h3>
+                <p class="desc">收藏貼文、活動、連結與想去清單的整理工具。已有專案，但目前沒固定公開入口。</p>
+              </div>
+            </div>
+            <span class="badge wait">整理中</span>
+          </div>
+          <div class="tools">
+            <button class="btn disabled" type="button">尚未公開網址</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="top">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div class="icon green">🛍️</div>
+              <div>
+                <h3 class="title">我的消費簿</h3>
+                <p class="desc">用來記錄購物、付款、物流與到貨狀態的工具版本，目前還在檔案狀態，尚未掛成固定網址。</p>
+              </div>
+            </div>
+            <span class="badge wait">整理中</span>
+          </div>
+          <div class="tools">
+            <button class="btn disabled" type="button">尚未公開網址</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="sec">
+      <h2>🔗 開發／管理入口</h2>
+      <p class="sub">這區比較偏後台倉庫，不是平常使用入口，但需要時可以直接點。</p>
+      <div class="mini-list">
+        <div class="mini-item">
+          <div>
+            <div class="mini-name">比價簿 GitHub</div>
+            <div class="small">程式庫與版本管理</div>
+          </div>
+          <a class="btn ghost" href="https://github.com/xzk410-stack/bijia-book-pwa" target="_blank" rel="noopener">開啟</a>
+        </div>
+        <div class="mini-item">
+          <div>
+            <div class="mini-name">收藏雷達 GitHub</div>
+            <div class="small">收藏工具專案倉庫</div>
+          </div>
+          <a class="btn ghost" href="https://github.com/xzk410-stack/save-radar" target="_blank" rel="noopener">開啟</a>
+        </div>
+        <div class="mini-item">
+          <div>
+            <div class="mini-name">旅伴 Android 專案</div>
+            <div class="small">旅伴 Android 專案倉庫</div>
+          </div>
+          <a class="btn ghost" href="https://github.com/xzk410-stack/travel-planner-android" target="_blank" rel="noopener">開啟</a>
+        </div>
+        <div class="mini-item">
+          <div>
+            <div class="mini-name">Discord Bot 管理頁</div>
+            <div class="small">應用程式安裝與開發管理入口</div>
+          </div>
+          <a class="btn ghost" href="https://discord.com/developers/applications/1536996343615328297/installation" target="_blank" rel="noopener">開啟</a>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      這是你的工具總入口第一版。之後如果你要，我還可以再幫你繼續升級，例如：<br>
+      ① 幫每個工具加上「最後更新日期」<br>
+      ② 幫還沒公開的工具補成可直接打開的正式網址<br>
+      ③ 加上「一鍵複製網址」按鈕<br>
+      ④ 做成更像 App 首頁的版本
+    </div>
+  </main>
+</body>
+</html>
