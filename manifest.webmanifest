@@ -1,9 +1,9 @@
 {
   "name": "比價簿",
   "short_name": "比價簿",
-  "description": "記錄購買價格、比較歷史最低價、掃條碼與查看價格走勢。",
+  "description": "記錄購買價格、比較歷史最低價、掃條碼與查看價格走勢，登入後自動雲端同步。",
   "lang": "zh-TW",
-  "start_url": "./",
+  "start_url": "./pricebook/",
   "scope": "./",
   "display": "standalone",
   "background_color": "#F8F4EC",
