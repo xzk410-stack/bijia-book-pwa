@@ -1,0 +1,13 @@
+{
+  "name":"我的消費簿",
+  "short_name":"消費簿",
+  "description":"記錄日常支出、付款、出貨與到貨整理。",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#f7f7fb",
+  "theme_color":"#f7f7fb",
+  "icons":[
+    {"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
