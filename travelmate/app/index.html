@@ -18,23 +18,15 @@
  try{
   if(!('DecompressionStream' in window)) throw new Error('瀏覽器版本較舊，請更新 Safari 或 Chrome 後再開啟');
   const appBase=new URL('./',window.location.href);
-  const googlePatchUrl=new URL('google-auth-patch.js?ui=20260907-3',appBase).href;
   const files=['part01.txt','part02.txt','part03.txt','part04.txt','part05.txt','part06.txt'];
-  const [parts,patchSource]=await Promise.all([
-    Promise.all(files.map(x=>fetch(new URL('payload/'+x+'?ui=20260907-3',appBase),{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('正式版載入失敗');return r.text()}))),
-    fetch(googlePatchUrl,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Google 登入元件載入失敗');return r.text()})
-  ]);
+  const parts=await Promise.all(files.map(x=>fetch(new URL('payload/'+x,appBase),{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('正式版載入失敗');return r.text()})));
   const b64=parts.join('').replace(/\s/g,'');
   const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
   const ds=new DecompressionStream('gzip');
-  const html=await new Response(new Blob([bin]).stream().pipeThrough(ds)).text();
-  const parsed=new DOMParser().parseFromString(html,'text/html');
-  const bridge=parsed.createElement('script');
-  bridge.setAttribute('data-travel-google-patch','inline-v3');
-  bridge.textContent=patchSource;
-  parsed.body.appendChild(bridge);
-  const patched='<!doctype html>\n'+parsed.documentElement.outerHTML;
-  document.open();document.write(patched);document.close();
+  let html=await new Response(new Blob([bin]).stream().pipeThrough(ds)).text();
+  const patch='<script src="./google-auth-patch.js?ui=20260907-4" data-travel-google-patch="external-v4"><\/script>';
+  html=/<\/body>/i.test(html)?html.replace(/<\/body>/i,patch+'</body>'):html+patch;
+  document.open();document.write(html);document.close();
  }catch(e){
   document.getElementById('msg').textContent=(e&&e.message)||'載入失敗，請重新整理';
  }
