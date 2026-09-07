@@ -22,7 +22,9 @@
   const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
   const ds=new DecompressionStream('gzip');
   const html=await new Response(new Blob([bin]).stream().pipeThrough(ds)).text();
-  document.open();document.write(html);document.close();
+  const googleBridge='<script src="./google-auth-patch.js"><\\/script>';
+  const patched=/<\\/body>/i.test(html)?html.replace(/<\\/body>/i,googleBridge+'</body>'):html+googleBridge;
+  document.open();document.write(patched);document.close();
  }catch(e){
   document.getElementById('msg').textContent=(e&&e.message)||'載入失敗，請重新整理';
  }
