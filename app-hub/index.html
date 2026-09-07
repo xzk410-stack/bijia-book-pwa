@@ -16,14 +16,24 @@ body{padding:calc(24px + env(safe-area-inset-top)) 18px calc(38px + env(safe-are
 <body>
 <main class="wrap">
   <header class="hero"><div class="eyebrow">MY APP COLLECTION</div><h1>App 分享入口</h1><p>收藏、旅行、比價、消費紀錄，都從這裡進入正式最新版。</p></header>
-  <div class="notice">這個入口固定連到各 App 的正式網址；之後 App 更新，不需要再改這個入口。</div>
+  <div class="notice">這個入口固定連到各 App 的正式網址；每次開啟會自動避開舊快取，直接載入最新版。</div>
   <section class="grid">
     <article class="card save"><div class="icon">🐱</div><h2>收藏雷達</h2><p>整理 IG、Threads、Facebook 的收藏，快速搜尋、分類與追蹤。</p><div class="actions"><a class="btn primary" href="https://save-radar-gold.vercel.app/">開啟 App</a><a class="btn" href="https://save-radar-gold.vercel.app/download">Android 下載</a></div></article>
-    <article class="card travel"><div class="icon">🗺️</div><h2>旅伴</h2><p>旅行收藏、行程、票券與想去清單集中管理。</p><div class="actions"><a class="btn primary" href="../travelmate/app/">開啟 App</a><a class="btn" href="../travelmate/app/">手機安裝</a></div></article>
-    <article class="card price"><div class="icon">🔎</div><h2>比價簿</h2><p>記錄每次看到的價格，之後一眼知道哪裡買最划算。</p><div class="actions"><a class="btn primary" href="../pricebook/">開啟 App</a><a class="btn" href="../download.html">Android 下載</a></div></article>
-    <article class="card spend"><div class="icon">🧾</div><h2>我的消費簿</h2><p>把付款、出貨、到貨與消費紀錄放在同一個地方。</p><div class="actions"><a class="btn primary" href="../spendbook/">開啟 App</a><a class="btn" href="../spendbook/">手機安裝</a></div></article>
+    <article class="card travel"><div class="icon">🗺️</div><h2>旅伴</h2><p>旅行收藏、行程、票券與想去清單集中管理。</p><div class="actions"><a class="btn primary fresh" href="../travelmate/app/">開啟 App</a><a class="btn fresh" href="../travelmate/app/">手機安裝</a></div></article>
+    <article class="card price"><div class="icon">🔎</div><h2>比價簿</h2><p>記錄每次看到的價格，之後一眼知道哪裡買最划算。</p><div class="actions"><a class="btn primary fresh" href="../pricebook/">開啟 App</a><a class="btn" href="../download.html">Android 下載</a></div></article>
+    <article class="card spend"><div class="icon">🧾</div><h2>我的消費簿</h2><p>把付款、出貨、到貨與消費紀錄放在同一個地方。</p><div class="actions"><a class="btn primary fresh" href="../spendbook/">開啟 App</a><a class="btn fresh" href="../spendbook/">手機安裝</a></div></article>
   </section>
   <div class="foot">正式分享入口 · GitHub Pages<br>不再使用 ShipStatic</div>
 </main>
+<script>
+for(const link of document.querySelectorAll('a.fresh')){
+  link.addEventListener('click',e=>{
+    e.preventDefault();
+    const u=new URL(link.getAttribute('href'),location.href);
+    u.searchParams.set('fresh',Date.now().toString(36));
+    location.href=u.href;
+  });
+}
+</script>
 </body>
 </html>
