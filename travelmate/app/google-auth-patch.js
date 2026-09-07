@@ -4,6 +4,8 @@
   const RETURNING_FROM_OAUTH=location.hash.includes('access_token=')||/[?&]code=/.test(location.search);
   let client=null,observer=null,scheduled=false;
 
+  const GOOGLE_MARK='<svg aria-hidden="true" viewBox="0 0 18 18" style="width:20px;height:20px;display:block;flex:0 0 auto"><path fill="#4285F4" d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.482h4.844c-.209 1.125-.844 2.078-1.797 2.716v2.258h2.908c1.702-1.567 2.685-3.878 2.685-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.468-.806 5.955-2.18l-2.908-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.585-5.037-3.713H.956v2.332A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.963 10.708A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.281-1.708V4.96H.956A9 9 0 0 0 0 9c0 1.452.347 2.827.956 4.04l3.007-2.332z"/><path fill="#EA4335" d="M9 3.579c1.321 0 2.507.454 3.441 1.346l2.581-2.581C13.464.892 11.426 0 9 0A9 9 0 0 0 .956 4.96l3.007 2.332C4.672 5.164 6.656 3.579 9 3.579z"/></svg>';
+
   function visible(el){
     if(!el||!el.isConnected)return false;
     const s=getComputedStyle(el);
@@ -47,9 +49,8 @@
       #travelGoogleWrap{width:100%;margin:12px 0 2px!important}
       #travelGoogleDivider{display:flex;align-items:center;gap:10px;color:#8a9590;font-size:11px;margin:4px 0 10px}
       #travelGoogleDivider:before,#travelGoogleDivider:after{content:"";height:1px;background:#e7ece9;flex:1}
-      #travelGoogleLogin{width:100%;min-height:48px;border-radius:14px;border:1px solid #dce5e1;background:#fff;color:#25322d;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 2px 8px rgba(53,104,89,.06);-webkit-tap-highlight-color:transparent}
+      #travelGoogleLogin{width:100%;min-height:48px;border-radius:14px;border:1px solid #dce5e1;background:#fff;color:#25322d;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 2px 8px rgba(53,104,89,.06);-webkit-tap-highlight-color:transparent}
       #travelGoogleLogin:disabled{opacity:.62}
-      #travelGoogleMark{width:23px;height:23px;border-radius:50%;display:grid;place-items:center;border:1px solid #e0e5e2;background:#fff;color:#4285f4;font-size:14px;font-weight:900}
       #travelGoogleHint{text-align:center;color:#73817a;font-size:11px;line-height:1.5;margin-top:8px}
       #travelGoogleError{font-size:12px;line-height:1.55;color:#8a5c22;background:#fff7e8;border:1px solid #f0dfba;border-radius:12px;padding:9px 11px;margin:8px 0}
       @media(max-width:560px){#travelGoogleLogin{min-height:46px}}
@@ -96,7 +97,7 @@
     const btn=document.createElement('button');
     btn.id='travelGoogleLogin';
     btn.type='button';
-    btn.innerHTML='<span id="travelGoogleMark">G</span><span>使用 Google 登入</span>';
+    btn.innerHTML=GOOGLE_MARK+'<span>使用 Google 登入</span>';
     btn.addEventListener('click',googleLogin);
     wrap.appendChild(btn);
 
