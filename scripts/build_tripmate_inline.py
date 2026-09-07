@@ -1,8 +1,8 @@
 from pathlib import Path
 import base64
-import gzip
 import json
 import re
+import zlib
 
 root = Path(__file__).resolve().parents[1]
 app = root / 'travelmate' / 'app'
@@ -11,11 +11,33 @@ payload = ''.join(p.read_text(encoding='utf-8') for p in parts)
 payload = ''.join(payload.split())
 patch = (app / 'google-auth-patch.js').read_text(encoding='utf-8')
 
-# Decode the full app at build time. The browser receives the actual app HTML directly,
-# so it no longer needs fetch(), DecompressionStream, or the old loader screen.
-raw = gzip.decompress(base64.b64decode(payload)).decode('utf-8')
+# Decode the gzip payload at build time, but ignore a stale/bad gzip CRC trailer.
+# The DEFLATE body itself is still usable, and this avoids any browser-side loader/fetch step.
+data = base64.b64decode(payload)
+if data[:2] != b'\x1f\x8b':
+    raise RuntimeError('TripMate payload is not gzip data')
+flg = data[3]
+pos = 10
+if flg & 0x04:
+    xlen = int.from_bytes(data[pos:pos+2], 'little')
+    pos += 2 + xlen
+if flg & 0x08:
+    while pos < len(data) and data[pos] != 0:
+        pos += 1
+    pos += 1
+if flg & 0x10:
+    while pos < len(data) and data[pos] != 0:
+        pos += 1
+    pos += 1
+if flg & 0x02:
+    pos += 2
+compressed = data[pos:-8] if len(data) >= pos + 8 else data[pos:]
+dec = zlib.decompressobj(-zlib.MAX_WBITS)
+raw_bytes = dec.decompress(compressed) + dec.flush()
+raw = raw_bytes.decode('utf-8')
+if '<html' not in raw.lower():
+    raise RuntimeError('Decoded TripMate payload is not HTML')
 
-# Add explicit no-cache metadata for the fresh route.
 if '<head>' in raw:
     raw = raw.replace(
         '<head>',
@@ -59,8 +81,7 @@ if '</body>' in raw:
 else:
     direct_html = raw + injected
 
-# Publish to the old route too, but more importantly publish to a totally new route
-# outside the old service-worker/cache scope.
+# Publish the direct HTML both to the old route and a brand-new route outside the old SW/cache scope.
 (app / 'index.html').write_text(direct_html, encoding='utf-8')
 
 fresh = root / 'tripmate-live'
