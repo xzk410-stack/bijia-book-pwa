@@ -18,6 +18,7 @@ jobs:
         shell: bash
         run: |
           curl --fail --silent --show-error --location 'https://dfvrlddywisvlnsqdjuf.supabase.co/functions/v1/tripmate-source-export' -o /tmp/tripmate.html
+          test "$(wc -c < /tmp/tripmate.html)" -eq 91357
           grep -qi '<!doctype html' /tmp/tripmate.html
           grep -q '歡迎回到旅伴' /tmp/tripmate.html
           grep -q 'saved_places' /tmp/tripmate.html
