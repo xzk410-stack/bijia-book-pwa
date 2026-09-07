@@ -1,0 +1,30 @@
+name: Build standalone TripMate page
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/build-tripmate-inline.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate standalone TripMate launcher
+        run: python3 scripts/build_tripmate_inline.py
+      - name: Commit generated page
+        shell: bash
+        run: |
+          if git diff --quiet -- travelmate/app/index.html; then
+            echo "No generated changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add travelmate/app/index.html
+          git commit -m "Make TripMate loader fully standalone"
+          git push
