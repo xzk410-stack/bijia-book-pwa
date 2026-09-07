@@ -2,7 +2,7 @@
   const SUPABASE_URL='https://dfvrlddywisvlnsqdjuf.supabase.co';
   const SUPABASE_KEY='sb_publishable_RO7yssf3v-kRdtI12fVx8w_gnpcKK5I';
   const RETURNING_FROM_OAUTH=location.hash.includes('access_token=')||/[?&]code=/.test(location.search);
-  let client=null;
+  let client=null,observer=null;
 
   function visible(el){
     if(!el)return false;
@@ -15,7 +15,14 @@
     if(window.supabase&&typeof window.supabase.createClient==='function')return Promise.resolve();
     return new Promise((resolve,reject)=>{
       const existing=[...document.scripts].find(s=>s.src&&s.src.includes('@supabase/supabase-js'));
-      if(existing){existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}
+      if(existing){
+        let tries=0;
+        const timer=setInterval(()=>{
+          if(window.supabase&&typeof window.supabase.createClient==='function'){clearInterval(timer);resolve();}
+          else if(++tries>100){clearInterval(timer);reject(new Error('登入元件載入逾時'));}
+        },50);
+        return;
+      }
       const s=document.createElement('script');
       s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
       s.onload=resolve;s.onerror=reject;document.head.appendChild(s);
@@ -54,14 +61,14 @@
   }
 
   function addButton(){
-    if(document.getElementById('travelGoogleLogin'))return;
+    if(document.getElementById('travelGoogleLogin')){observer?.disconnect();return true;}
     const email=[...document.querySelectorAll('input[type="email"],input[autocomplete="email"]')].find(visible);
     const password=[...document.querySelectorAll('input[type="password"]')].find(visible);
-    if(!email||!password)return;
+    if(!email||!password)return false;
 
     const form=email.closest('form');
-    let anchor=form||email.closest('label')||email;
-    if(!anchor.parentNode)return;
+    const anchor=form||email.closest('label')||email;
+    if(!anchor.parentNode)return false;
 
     const wrap=document.createElement('div');
     wrap.id='travelGoogleWrap';
@@ -78,12 +85,15 @@
     divider.style.cssText='text-align:center;color:#8a9590;font-size:11px;margin:10px 0 0;';
     wrap.appendChild(divider);
     anchor.parentNode.insertBefore(wrap,anchor);
+    observer?.disconnect();
+    return true;
   }
 
   function boot(){
-    addButton();
-    const observer=new MutationObserver(addButton);
-    observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','style','class']});
+    if(!addButton()){
+      observer=new MutationObserver(addButton);
+      observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','style','class']});
+    }
     getClient().then(c=>c.auth.getSession()).then(({data})=>{
       if(RETURNING_FROM_OAUTH&&data?.session){
         sessionStorage.setItem('travel_google_oauth_ok','1');
