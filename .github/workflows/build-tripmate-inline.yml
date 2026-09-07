@@ -5,6 +5,9 @@ on:
     branches: [ main ]
     paths:
       - '.github/workflows/build-tripmate-inline.yml'
+      - 'scripts/build_tripmate_inline.py'
+      - 'travelmate/app/payload/**'
+      - 'travelmate/app/google-auth-patch.js'
 
 permissions:
   contents: write
@@ -14,17 +17,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Generate standalone TripMate launcher
+      - name: Generate standalone TripMate pages
         run: python3 scripts/build_tripmate_inline.py
-      - name: Commit generated page
+      - name: Commit generated pages
         shell: bash
         run: |
-          if git diff --quiet -- travelmate/app/index.html; then
+          if git diff --quiet -- travelmate/app/index.html tripmate-live; then
             echo "No generated changes"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add travelmate/app/index.html
-          git commit -m "Make TripMate loader fully standalone"
+          git add travelmate/app/index.html tripmate-live
+          git commit -m "Publish standalone TripMate pages"
           git push
