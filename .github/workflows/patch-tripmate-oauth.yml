@@ -1,0 +1,35 @@
+name: Patch TripMate Android OAuth bridge
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.head_commit.message == 'Add TripMate web OAuth patcher'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inject Android OAuth return bridge
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('tripmate-live/index.html')
+          s=p.read_text(encoding='utf-8')
+          tag='<script src="./android-oauth-return.js?v=20260907-142"></script>'
+          if tag not in s:
+              if '</body>' not in s:
+                  raise SystemExit('tripmate-live/index.html has no closing body tag')
+              s=s.replace('</body>', tag+'\n</body>')
+              p.write_text(s,encoding='utf-8')
+      - name: Commit patched page
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tripmate-live/index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Enable TripMate Android OAuth return'
+          git push
