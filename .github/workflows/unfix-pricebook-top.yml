@@ -1,0 +1,39 @@
+name: Restore 比價簿 normal top scrolling
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/unfix-pricebook-top.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make app header scroll normally
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('pricebook/app.html')
+          s = p.read_text(encoding='utf-8')
+          old = 'header{padding:26px 18px 14px;position:sticky;top:0;z-index:20;background:rgba(248,244,236,.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(231,226,216,.8)}'
+          new = 'header{padding:26px 18px 14px;position:relative;z-index:1;background:rgba(248,244,236,.94);border-bottom:1px solid rgba(231,226,216,.8)}'
+          if old not in s:
+              raise SystemExit('expected sticky header rule not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit change
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pricebook/app.html
+          git diff --cached --quiet || git commit -m 'Restore normal scrolling for 比價簿 top area'
+          git push
