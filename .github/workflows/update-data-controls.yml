@@ -1,0 +1,37 @@
+name: Update Pricebook data controls
+
+on:
+  push:
+    paths:
+      - '.github/workflows/update-data-controls.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update settings UI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('pricebook/app.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('''  <div class="panel">\n    <h3 class="panel-title"><svg class="ui-icon"><use href="#i-trash"></use></svg>資料管理</h3>\n    <button class="btn ghost danger" id="clearAll" style="width:100%">清除全部資料</button>\n    <div class="version-note">比價簿 v1.4.4</div>\n  </div>''','''  <div class="panel">\n    <h3 class="panel-title"><svg class="ui-icon"><use href="#i-trash"></use></svg>進階設定</h3>\n    <details class="danger-zone">\n      <summary>危險操作</summary>\n      <div class="danger-zone-body">\n        <div style="font-weight:800;color:#A14F47;margin-bottom:5px">清除本機與雲端資料</div>\n        <div class="smallnote">會清除目前帳號的商品與價格紀錄，並同步到其他裝置；執行前會先建立備份。</div>\n        <button class="btn ghost danger" id="clearAll" style="width:100%;margin-top:12px">清除本機與雲端資料</button>\n      </div>\n    </details>\n    <div class="version-note">比價簿 v1.6.7</div>\n  </div>''',1)
+          s=s.replace('.danger{color:var(--bad)!important}', '.danger{color:var(--bad)!important}.danger-zone{border:1px solid #F0D8D4;border-radius:15px;background:#FFF9F7;overflow:hidden}.danger-zone summary{list-style:none;padding:12px 13px;font-weight:800;color:#8F5C55;cursor:pointer}.danger-zone summary::-webkit-details-marker{display:none}.danger-zone-body{border-top:1px solid #F1E2DE;padding:13px}',1)
+          old="document.getElementById('clearAll').onclick=()=>{if(confirm('真的要清除全部商品與價格紀錄？會先自動備份目前資料。')){createBackup('清除前備份',db);db=defaultDB();localStorage.setItem(KEY,JSON.stringify(db));renderAll();toast('全部資料已清除，可從自動備份還原')}};"
+          new="document.getElementById('clearAll').onclick=()=>{if(!confirm('這會影響目前帳號與其他同步裝置。確定要繼續嗎？'))return;if(!confirm('最後確認：仍要清除全部商品與價格紀錄嗎？'))return;createBackup('清除前備份',db);db=defaultDB();localStorage.setItem(KEY,JSON.stringify(db));renderAll();toast('資料已清除，可從備份還原')};"
+          if old not in s: raise SystemExit('handler not found')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pricebook/app.html
+          git diff --cached --check
+          git commit -m 'Improve Pricebook data controls'
+          git push
