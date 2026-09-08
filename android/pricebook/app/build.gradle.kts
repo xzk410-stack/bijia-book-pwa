@@ -9,7 +9,7 @@ val releaseKeyPassword = System.getenv("BIJIABU_KEY_PASSWORD")
 
 android {
     namespace = "com.bijiabu.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.bijiabu.app"
