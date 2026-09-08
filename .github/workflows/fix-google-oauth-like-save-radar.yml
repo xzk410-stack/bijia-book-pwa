@@ -1,0 +1,74 @@
+name: Fix 比價簿 Google OAuth like 收藏雷達
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-google-oauth-like-save-radar.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch Android and web OAuth flow
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          main = Path('android/pricebook/app/src/main/java/com/bijiabu/app/MainActivity.java')
+          text = main.read_text(encoding='utf-8')
+          old = 'private static final String AUTH_REDIRECT_PATH = "/";'
+          new = 'private static final String AUTH_REDIRECT_PATH = "/login";'
+          if old not in text:
+              raise SystemExit('AUTH_REDIRECT_PATH pattern not found')
+          text = text.replace(old, new, 1)
+          text = text.replace('BijiaBook/1.6.3 (Android)', 'BijiaBook/1.6.5 (Android)', 1)
+          main.write_text(text, encoding='utf-8')
+
+          gradle = Path('android/pricebook/app/build.gradle.kts')
+          text = gradle.read_text(encoding='utf-8')
+          if 'versionCode = 24' not in text or 'versionName = "1.6.4"' not in text:
+              raise SystemExit('version pattern not found')
+          text = text.replace('versionCode = 24', 'versionCode = 25', 1)
+          text = text.replace('versionName = "1.6.4"', 'versionName = "1.6.5"', 1)
+          gradle.write_text(text, encoding='utf-8')
+
+          cloud = Path('pricebook/cloud.js')
+          text = cloud.read_text(encoding='utf-8')
+          start = text.index('async function signInWithGoogle(){')
+          end = text.index('window.handleAndroidOAuthCallback=url=>{', start)
+          replacement = '''async function signInWithGoogle(){
+            setMessage('');
+            try{
+              const inAndroid=!!(window.Android&&typeof Android.openGoogleLogin==='function');
+              // 完整沿用收藏雷達 Android 已穩定使用的 Auth Tab 流程：
+              // Google 完成後回到同一個 save-radar-gold.vercel.app/login 路徑，
+              // Auth Tab 直接把結果交回比價簿，不再另外跳一般 Chrome 或靠 Deep Link 猜回程。
+              const redirectTo=inAndroid?'https://save-radar-gold.vercel.app/login?source=bijiabu':location.origin+location.pathname;
+              const {data,error}=await dbClient.auth.signInWithOAuth({provider:'google',options:{redirectTo,skipBrowserRedirect:inAndroid}});
+              if(error)throw error;
+              if(inAndroid){
+                if(!data?.url)throw new Error('無法取得 Google 登入網址。');
+                Android.openGoogleLogin(data.url);
+              }
+            }catch(e){setMessage(e.message||'Google 登入目前無法使用，請先用原本 Email／密碼登入。')}
+          }
+          '''
+          text = text[:start] + replacement + text[end:]
+          cloud.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add android/pricebook/app/src/main/java/com/bijiabu/app/MainActivity.java android/pricebook/app/build.gradle.kts pricebook/cloud.js
+          git diff --cached --check
+          git commit -m 'Fix 比價簿 Google OAuth to mirror 收藏雷達'
+          git push
