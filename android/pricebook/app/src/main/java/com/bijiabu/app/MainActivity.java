@@ -3,6 +3,7 @@ package com.bijiabu.app;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
@@ -51,6 +52,9 @@ public class MainActivity extends ComponentActivity {
     private static final String START_URL = "https://xzk410-stack.github.io/bijia-book-pwa/pricebook/";
     private static final String AUTH_REDIRECT_HOST = "save-radar-gold.vercel.app";
     private static final String AUTH_REDIRECT_PATH = "/login";
+    private static final String AUTH_PREFS = "bijiabu_auth_session";
+    private static final String APP_HOST = "xzk410-stack.github.io";
+    private static final String APP_PATH_PREFIX = "/bijia-book-pwa/pricebook/";
     private WebView webView;
     private FrameLayout root;
     private ValueCallback<Uri[]> filePathCallback;
@@ -58,6 +62,7 @@ public class MainActivity extends ComponentActivity {
     private String pendingCloudFilename;
     private String pendingCloudContent;
     private String pendingCloudMimeType;
+    private volatile String currentPageUrl = START_URL;
     private final ActivityResultLauncher<Intent> authTabLauncher =
             AuthTabIntent.registerActivityResultLauncher(this, this::handleAuthResult);
 
@@ -102,12 +107,18 @@ public class MainActivity extends ComponentActivity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
         settings.setTextZoom(100);
-        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.6 (Android)");
+        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.7 (Android)");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             settings.setSafeBrowsingEnabled(true);
         }
 
         webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                currentPageUrl = url == null ? "" : url;
+                super.onPageFinished(view, url);
+            }
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, android.webkit.WebResourceRequest request) {
                 Uri uri = request.getUrl();
@@ -276,7 +287,50 @@ public class MainActivity extends ComponentActivity {
         return super.dispatchKeyEvent(event);
     }
 
+    private boolean isTrustedPricebookPage() {
+        try {
+            Uri uri = Uri.parse(currentPageUrl == null ? "" : currentPageUrl);
+            return "https".equalsIgnoreCase(uri.getScheme())
+                    && APP_HOST.equalsIgnoreCase(uri.getHost())
+                    && uri.getPath() != null
+                    && uri.getPath().startsWith(APP_PATH_PREFIX);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private class AndroidBridge {
+        @JavascriptInterface
+        public void saveAuthSession(String accessToken, String refreshToken) {
+            if (!isTrustedPricebookPage()) return;
+            if (accessToken == null || accessToken.isEmpty() || refreshToken == null || refreshToken.isEmpty()) return;
+            getSharedPreferences(AUTH_PREFS, MODE_PRIVATE)
+                    .edit()
+                    .putString("access_token", accessToken)
+                    .putString("refresh_token", refreshToken)
+                    .apply();
+        }
+
+        @JavascriptInterface
+        public String loadAuthSession() {
+            if (!isTrustedPricebookPage()) return "{}";
+            try {
+                SharedPreferences prefs = getSharedPreferences(AUTH_PREFS, MODE_PRIVATE);
+                JSONObject out = new JSONObject();
+                out.put("access_token", prefs.getString("access_token", ""));
+                out.put("refresh_token", prefs.getString("refresh_token", ""));
+                return out.toString();
+            } catch (Exception e) {
+                return "{}";
+            }
+        }
+
+        @JavascriptInterface
+        public void clearAuthSession() {
+            if (!isTrustedPricebookPage()) return;
+            getSharedPreferences(AUTH_PREFS, MODE_PRIVATE).edit().clear().apply();
+        }
+
         @JavascriptInterface
         public void openGoogleLogin(String url) {
             runOnUiThread(() -> launchGoogleAuthTab(url));

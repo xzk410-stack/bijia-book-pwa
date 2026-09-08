@@ -15,8 +15,8 @@ android {
         applicationId = "com.bijiabu.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 26
-        versionName = "1.6.6"
+        versionCode = 27
+        versionName = "1.6.7"
     }
 
     if (
