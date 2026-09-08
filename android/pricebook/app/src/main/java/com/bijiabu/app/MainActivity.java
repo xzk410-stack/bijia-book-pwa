@@ -49,7 +49,7 @@ public class MainActivity extends ComponentActivity {
     private static final int CLOUD_SAVE_REQUEST = 1002;
     private static final String START_URL = "https://xzk410-stack.github.io/bijia-book-pwa/pricebook/";
     private static final String AUTH_REDIRECT_HOST = "save-radar-gold.vercel.app";
-    private static final String AUTH_REDIRECT_PATH = "/";
+    private static final String AUTH_REDIRECT_PATH = "/login";
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
     private GmsBarcodeScanner barcodeScanner;
@@ -84,7 +84,7 @@ public class MainActivity extends ComponentActivity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
         settings.setTextZoom(100);
-        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.3 (Android)");
+        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.5 (Android)");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             settings.setSafeBrowsingEnabled(true);
         }
