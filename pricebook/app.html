@@ -91,7 +91,7 @@ nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(720px,
 .detail-title{display:flex;gap:13px;align-items:center;margin-bottom:12px}.detail-title h2{margin:0;font-size:20px}.badge{display:inline-block;border-radius:999px;background:#EEF5EF;padding:4px 8px;font-size:11px;color:#9a513f;margin-top:5px}
 .summary4{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0}.summarybox{padding:12px;background:#F7F7F2;border-radius:14px}.summarybox small{display:block;color:var(--muted);font-size:10px}.summarybox b{font-size:16px}
 .history{display:grid;gap:8px}.hrow{border:1px solid var(--line);border-radius:14px;padding:11px}.hhead{display:flex;justify-content:space-between;gap:10px}.hprice{font-weight:800}.hmeta{font-size:11px;color:var(--muted);margin-top:4px}.pill{font-size:10px;padding:3px 6px;border-radius:999px;background:#EEF0EA}
-.danger{color:var(--bad)!important}
+.danger{color:var(--bad)!important}.danger-zone{border:1px solid #F0D8D4;border-radius:15px;background:#FFF9F7;overflow:hidden}.danger-zone summary{list-style:none;padding:12px 13px;font-weight:800;color:#8F5C55;cursor:pointer}.danger-zone summary::-webkit-details-marker{display:none}.danger-zone-body{border-top:1px solid #F1E2DE;padding:13px}
 .image-preview{width:72px;height:72px;border-radius:16px;background:#F1F5EE;display:grid;place-items:center;overflow:hidden}.image-preview img{width:100%;height:100%;object-fit:cover}
 .toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,20px);background:#18372B;color:white;padding:10px 15px;border-radius:13px;opacity:0;pointer-events:none;transition:.2s;z-index:100;font-size:13px}.toast.show{opacity:1;transform:translate(-50%,0)}
 hr{border:0;border-top:1px solid var(--line);margin:14px 0}
@@ -329,9 +329,16 @@ nav{max-width:100vw}
     <div class="smallnote" style="margin-top:8px">自動查詢只會送出條碼到公開商品資料庫，不會上傳你的價格紀錄。</div>
   </div>
   <div class="panel">
-    <h3 class="panel-title"><svg class="ui-icon"><use href="#i-trash"></use></svg>資料管理</h3>
-    <button class="btn ghost danger" id="clearAll" style="width:100%">清除全部資料</button>
-    <div class="version-note">比價簿 v1.4.4</div>
+    <h3 class="panel-title"><svg class="ui-icon"><use href="#i-trash"></use></svg>進階設定</h3>
+    <details class="danger-zone">
+      <summary>危險操作</summary>
+      <div class="danger-zone-body">
+        <div style="font-weight:800;color:#A14F47;margin-bottom:5px">清除本機與雲端資料</div>
+        <div class="smallnote">會清除目前帳號的商品與價格紀錄，並同步到其他裝置；執行前會先建立備份。</div>
+        <button class="btn ghost danger" id="clearAll" style="width:100%;margin-top:12px">清除本機與雲端資料</button>
+      </div>
+    </details>
+    <div class="version-note">比價簿 v1.6.7</div>
   </div>
 </section>
 </main>
@@ -1189,7 +1196,7 @@ document.getElementById('exportCsv').onclick=exportCSV;
 document.getElementById('downloadHtml').onclick=downloadPage;
 document.getElementById('importJsonBtn').onclick=()=>document.getElementById('importJsonInput').click();
 document.getElementById('importJsonInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!x.products||!Array.isArray(x.products))throw 0;if(confirm('匯入會取代目前資料，確定嗎？目前資料會先自動備份。')){createBackup('匯入前備份',db);db=x;if(!db.settings)db.settings={nearLow:5,barcodeLookup:true};if(db.settings.barcodeLookup==null)db.settings.barcodeLookup=true;(db.products||[]).forEach(p=>{if(p.targetPrice==null)p.targetPrice=0;if(p.targetQty==null)p.targetQty=0;syncProductBarcodes(p)});saveDB('匯入備份');toast('備份已匯入 ✓')}}catch(err){alert('這個檔案不是有效的比價簿備份。')}e.target.value=''};
-document.getElementById('clearAll').onclick=()=>{if(confirm('真的要清除全部商品與價格紀錄？會先自動備份目前資料。')){createBackup('清除前備份',db);db=defaultDB();localStorage.setItem(KEY,JSON.stringify(db));renderAll();toast('全部資料已清除，可從自動備份還原')}};
+document.getElementById('clearAll').onclick=()=>{if(!confirm('這會影響目前帳號與其他同步裝置。確定要繼續嗎？'))return;if(!confirm('最後確認：仍要清除全部商品與價格紀錄嗎？'))return;createBackup('清除前備份',db);db=defaultDB();localStorage.setItem(KEY,JSON.stringify(db));renderAll();toast('資料已清除，可從備份還原')};
 
 renderAll();
 syncClearButton();
