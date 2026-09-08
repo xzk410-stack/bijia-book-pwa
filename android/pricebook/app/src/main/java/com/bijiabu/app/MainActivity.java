@@ -18,6 +18,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.view.KeyEvent;
 import android.widget.Toast;
+import android.widget.FrameLayout;
 import android.window.OnBackInvokedDispatcher;
 
 import androidx.activity.ComponentActivity;
@@ -51,6 +52,7 @@ public class MainActivity extends ComponentActivity {
     private static final String AUTH_REDIRECT_HOST = "save-radar-gold.vercel.app";
     private static final String AUTH_REDIRECT_PATH = "/login";
     private WebView webView;
+    private FrameLayout root;
     private ValueCallback<Uri[]> filePathCallback;
     private GmsBarcodeScanner barcodeScanner;
     private String pendingCloudFilename;
@@ -66,8 +68,24 @@ public class MainActivity extends ComponentActivity {
         getWindow().setStatusBarColor(Color.parseColor("#F8F4EC"));
         getWindow().setNavigationBarColor(Color.WHITE);
 
+        root = new FrameLayout(this);
+        root.setBackgroundColor(Color.parseColor("#F8F4EC"));
         webView = new WebView(this);
-        setContentView(webView);
+        root.addView(webView, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+        ));
+        setContentView(root);
+
+        // Android 15+ 會強制 edge-to-edge；把 WebView 放進系統安全區，
+        // 避免頂部狀態列與底部導覽列蓋住比價簿的固定工具列。
+        root.setOnApplyWindowInsetsListener((view, insets) -> {
+            int topInset = Math.max(insets.getSystemWindowInsetTop(), 0);
+            int bottomInset = Math.max(insets.getSystemWindowInsetBottom(), 0);
+            view.setPadding(0, topInset, 0, bottomInset);
+            return insets;
+        });
+        root.requestApplyInsets();
 
         GmsBarcodeScannerOptions scannerOptions = new GmsBarcodeScannerOptions.Builder()
                 .enableAutoZoom()
@@ -84,7 +102,7 @@ public class MainActivity extends ComponentActivity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
         settings.setTextZoom(100);
-        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.5 (Android)");
+        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.6 (Android)");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             settings.setSafeBrowsingEnabled(true);
         }
