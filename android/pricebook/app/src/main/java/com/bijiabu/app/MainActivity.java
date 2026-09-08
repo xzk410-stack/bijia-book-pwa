@@ -1,6 +1,5 @@
 package com.bijiabu.app;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -20,6 +19,10 @@ import android.webkit.WebViewClient;
 import android.view.KeyEvent;
 import android.widget.Toast;
 import android.window.OnBackInvokedDispatcher;
+
+import androidx.activity.ComponentActivity;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.browser.auth.AuthTabIntent;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -41,23 +44,20 @@ import com.google.mlkit.vision.codescanner.GmsBarcodeScanning;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class MainActivity extends Activity {
+public class MainActivity extends ComponentActivity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private static final int CLOUD_SAVE_REQUEST = 1002;
-    private static final int GOOGLE_AUTH_REQUEST = 1003;
     private static final String START_URL = "https://xzk410-stack.github.io/bijia-book-pwa/pricebook/";
     private static final String AUTH_REDIRECT_HOST = "xzk410-stack.github.io";
     private static final String AUTH_REDIRECT_PATH = "/bijia-book-pwa/pricebook/";
-    private static final String AUTH_TAB_SESSION = "android.support.customtabs.extra.SESSION";
-    private static final String AUTH_TAB_LAUNCH = "androidx.browser.auth.extra.LAUNCH_AUTH_TAB";
-    private static final String AUTH_TAB_REDIRECT_HOST = "androidx.browser.auth.extra.HTTPS_REDIRECT_HOST";
-    private static final String AUTH_TAB_REDIRECT_PATH = "androidx.browser.auth.extra.HTTPS_REDIRECT_PATH";
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
     private GmsBarcodeScanner barcodeScanner;
     private String pendingCloudFilename;
     private String pendingCloudContent;
     private String pendingCloudMimeType;
+    private final ActivityResultLauncher<Intent> authTabLauncher =
+            AuthTabIntent.registerActivityResultLauncher(this, this::handleAuthResult);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +84,7 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
         settings.setTextZoom(100);
-        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.1 (Android)");
+        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.2 (Android)");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             settings.setSafeBrowsingEnabled(true);
         }
@@ -166,12 +166,6 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == GOOGLE_AUTH_REQUEST) {
-            if (resultCode == RESULT_OK && data != null && data.getData() != null) {
-                webView.loadUrl(data.getData().toString());
-            }
-            return;
-        }
         if (requestCode == FILE_CHOOSER_REQUEST && filePathCallback != null) {
             Uri[] result = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
             filePathCallback.onReceiveValue(result);
@@ -197,17 +191,24 @@ public class MainActivity extends Activity {
 
     private void launchGoogleAuthTab(String url) {
         try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            intent.putExtra(AUTH_TAB_LAUNCH, true);
-            intent.putExtra(AUTH_TAB_REDIRECT_HOST, AUTH_REDIRECT_HOST);
-            intent.putExtra(AUTH_TAB_REDIRECT_PATH, AUTH_REDIRECT_PATH);
-            Bundle session = new Bundle();
-            session.putBinder(AUTH_TAB_SESSION, null);
-            intent.putExtras(session);
-            startActivityForResult(intent, GOOGLE_AUTH_REQUEST);
+            Uri authUri = Uri.parse(url);
+            if (!"https".equalsIgnoreCase(authUri.getScheme())) {
+                throw new IllegalArgumentException("只允許安全登入網址");
+            }
+            AuthTabIntent authTabIntent = new AuthTabIntent.Builder().build();
+            authTabIntent.launch(authTabLauncher, authUri, AUTH_REDIRECT_HOST, AUTH_REDIRECT_PATH);
         } catch (Exception e) {
             Toast.makeText(this, "無法開啟 Google 登入", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void handleAuthResult(AuthTabIntent.AuthResult result) {
+        if (result.resultCode == AuthTabIntent.RESULT_OK && result.resultUri != null) {
+            webView.loadUrl(result.resultUri.toString());
+            return;
+        }
+        if (result.resultCode == AuthTabIntent.RESULT_CANCELED) return;
+        Toast.makeText(this, "登入未完成，請再試一次", Toast.LENGTH_LONG).show();
     }
 
     private void handleAppBack() {
