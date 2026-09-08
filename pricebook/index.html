@@ -11,7 +11,7 @@
   const isOAuthReturn = /(?:^|[?#&])(code|access_token|error|error_code|error_description)=/i.test(callbackPayload);
   const isAndroidBrowser = /Android/i.test(navigator.userAgent) && !/BijiaBook\//i.test(navigator.userAgent);
   if (isOAuthReturn && isAndroidBrowser) {
-    location.replace('bijiabu://auth-callback' + location.search + location.hash);
+    location.replace('https://trip-companion-app.xzk410.chatgpt.site/pricebook-oauth' + location.search + location.hash);
   }
 })();
 </script>
