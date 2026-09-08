@@ -1,6 +1,14 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
+<script>
+if(window.top===window.self){
+  const u=new URL('./',location.href);
+  u.search=location.search;
+  u.hash=location.hash;
+  location.replace(u.href);
+}
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f7f7fb">

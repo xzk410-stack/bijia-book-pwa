@@ -3,8 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="theme-color" content="#f6f7f4">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="manifest" href="./manifest.webmanifest">
 <title>我的消費簿</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;background:#f6f7f4;color:#25332e}button,input{font:inherit}button{cursor:pointer}body{overflow:hidden}.shell{height:100%;display:flex;flex-direction:column}.topbar{display:none;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:rgba(255,255,255,.96);border-bottom:1px solid #e5e8e3}.topbar.show{display:flex}.account{min-width:0}.account b{display:block;font-size:13px}.account small{display:block;color:#737c77;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}.tools{display:flex;gap:7px}.tools button{border:1px solid #dfe5e1;background:#fff;border-radius:12px;padding:8px 10px;font-weight:700;color:#56635d}.cloud{color:#356f5e!important;background:#edf7f2!important;border-color:#d5eadf!important}iframe{border:0;width:100%;flex:1;background:#f7f7fb}
@@ -61,6 +63,7 @@
   </div>
 </section>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./cloud.js"></script>
+<script src="./cloud.js?v=google-login-20260909"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js?v=4").catch(()=>{})}</script>
 </body>
 </html>
