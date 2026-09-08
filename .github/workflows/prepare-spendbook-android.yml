@@ -1,0 +1,557 @@
+name: Prepare Spendbook Android
+
+on:
+  push:
+    paths:
+      - '.github/workflows/prepare-spendbook-android.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create Android wrapper and patch cloud login
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p android/spendbook/app/src/main/java/com/xzk410/spendbook
+          mkdir -p android/spendbook/app/src/main/res/values
+          mkdir -p android/spendbook/app/src/main/res/drawable
+          mkdir -p android/spendbook/app/src/main/res/mipmap-anydpi-v26
+
+          cat > android/spendbook/build.gradle.kts <<'EOF'
+          plugins {
+              id("com.android.application") version "8.9.1" apply false
+          }
+          EOF
+
+          cat > android/spendbook/settings.gradle.kts <<'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "Spendbook"
+          include(":app")
+          EOF
+
+          cat > android/spendbook/gradle.properties <<'EOF'
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          android.nonTransitiveRClass=true
+          EOF
+
+          cat > android/spendbook/app/build.gradle.kts <<'EOF'
+          plugins {
+              id("com.android.application")
+          }
+
+          val releaseStorePath = System.getenv("BIJIABU_KEYSTORE")
+          val releaseStorePassword = System.getenv("BIJIABU_STORE_PASSWORD")
+          val releaseKeyAlias = System.getenv("BIJIABU_KEY_ALIAS")
+          val releaseKeyPassword = System.getenv("BIJIABU_KEY_PASSWORD")
+
+          android {
+              namespace = "com.xzk410.spendbook"
+              compileSdk = 36
+
+              defaultConfig {
+                  applicationId = "com.xzk410.spendbook"
+                  minSdk = 26
+                  targetSdk = 35
+                  versionCode = 1
+                  versionName = "1.0.0"
+              }
+
+              if (
+                  releaseStorePath != null &&
+                  releaseStorePassword != null &&
+                  releaseKeyAlias != null &&
+                  releaseKeyPassword != null
+              ) {
+                  signingConfigs {
+                      create("release") {
+                          storeFile = file(releaseStorePath)
+                          storePassword = releaseStorePassword
+                          keyAlias = releaseKeyAlias
+                          keyPassword = releaseKeyPassword
+                      }
+                  }
+              }
+
+              buildTypes {
+                  release {
+                      isMinifyEnabled = false
+                      signingConfigs.findByName("release")?.let { signingConfig = it }
+                  }
+              }
+          }
+
+          dependencies {
+              implementation("androidx.activity:activity:1.10.0")
+              implementation("androidx.browser:browser:1.9.0")
+          }
+          EOF
+
+          cat > android/spendbook/app/src/main/AndroidManifest.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <application
+                  android:allowBackup="true"
+                  android:icon="@mipmap/ic_launcher"
+                  android:roundIcon="@mipmap/ic_launcher_round"
+                  android:label="@string/app_name"
+                  android:theme="@style/AppTheme"
+                  android:enableOnBackInvokedCallback="true"
+                  android:usesCleartextTraffic="false">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:launchMode="singleTask"
+                      android:screenOrientation="portrait">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                      <intent-filter>
+                          <action android:name="android.intent.action.VIEW" />
+                          <category android:name="android.intent.category.DEFAULT" />
+                          <category android:name="android.intent.category.BROWSABLE" />
+                          <data android:scheme="spendbook" android:host="auth-callback" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          cat > android/spendbook/app/src/main/res/values/strings.xml <<'EOF'
+          <resources>
+              <string name="app_name">我的消費簿</string>
+          </resources>
+          EOF
+
+          cat > android/spendbook/app/src/main/res/values/colors.xml <<'EOF'
+          <resources>
+              <color name="launcher_bg">#EEF0FF</color>
+          </resources>
+          EOF
+
+          cat > android/spendbook/app/src/main/res/values/styles.xml <<'EOF'
+          <resources>
+              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+                  <item name="android:fontFamily">sans</item>
+                  <item name="android:windowLightStatusBar">true</item>
+                  <item name="android:statusBarColor">#F7F7FB</item>
+                  <item name="android:navigationBarColor">#FFFFFF</item>
+                  <item name="android:windowLightNavigationBar">true</item>
+                  <item name="android:windowActionModeOverlay">true</item>
+              </style>
+          </resources>
+          EOF
+
+          cat > android/spendbook/app/src/main/res/drawable/ic_launcher_foreground.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp" android:height="108dp"
+              android:viewportWidth="108" android:viewportHeight="108">
+              <path android:fillColor="#FFFFFF" android:pathData="M27,18 H81 C87,18 90,21 90,27 V81 C90,87 87,90 81,90 H27 C21,90 18,87 18,81 V27 C18,21 21,18 27,18 Z"/>
+              <path android:fillColor="#EEF0FF" android:pathData="M31,34 H77 V42 H31 Z"/>
+              <path android:fillColor="#D9DEFE" android:pathData="M31,50 H60 V56 H31 Z"/>
+              <path android:fillColor="#D9DEFE" android:pathData="M31,63 H66 V69 H31 Z"/>
+              <path android:fillColor="#6B7CFA" android:pathData="M74,60 A16,16 0,1 0,74,92 A16,16 0,1 0,74,60 Z"/>
+              <path android:strokeColor="#FFFFFF" android:strokeWidth="5" android:strokeLineCap="round" android:fillColor="@android:color/transparent" android:pathData="M66,76 H82 M74,68 V84"/>
+          </vector>
+          EOF
+
+          cat > android/spendbook/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'EOF'
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/launcher_bg" />
+              <foreground android:drawable="@drawable/ic_launcher_foreground" />
+          </adaptive-icon>
+          EOF
+
+          cp android/spendbook/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml android/spendbook/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+
+          cat > android/spendbook/app/src/main/java/com/xzk410/spendbook/MainActivity.java <<'EOF'
+          package com.xzk410.spendbook;
+
+          import android.content.ContentValues;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.graphics.Color;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.os.Environment;
+          import android.provider.MediaStore;
+          import android.view.KeyEvent;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.ValueCallback;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebResourceRequest;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import android.widget.FrameLayout;
+          import android.widget.Toast;
+          import android.window.OnBackInvokedDispatcher;
+
+          import androidx.activity.ComponentActivity;
+          import androidx.activity.result.ActivityResultLauncher;
+          import androidx.browser.auth.AuthTabIntent;
+
+          import org.json.JSONObject;
+
+          import java.io.File;
+          import java.io.FileOutputStream;
+          import java.io.OutputStream;
+          import java.nio.charset.StandardCharsets;
+
+          public class MainActivity extends ComponentActivity {
+              private static final int FILE_CHOOSER_REQUEST = 1001;
+              private static final String START_URL = "https://xzk410-stack.github.io/bijia-book-pwa/spendbook/";
+              private static final String APP_HOST = "xzk410-stack.github.io";
+              private static final String APP_PATH_PREFIX = "/bijia-book-pwa/spendbook/";
+              private static final String AUTH_REDIRECT_HOST = "save-radar-gold.vercel.app";
+              private static final String AUTH_REDIRECT_PATH = "/login";
+              private static final String AUTH_PREFS = "spendbook_auth_session";
+
+              private WebView webView;
+              private FrameLayout root;
+              private ValueCallback<Uri[]> filePathCallback;
+              private volatile String currentPageUrl = START_URL;
+              private final ActivityResultLauncher<Intent> authTabLauncher =
+                      AuthTabIntent.registerActivityResultLauncher(this, this::handleAuthResult);
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  getWindow().setStatusBarColor(Color.parseColor("#F7F7FB"));
+                  getWindow().setNavigationBarColor(Color.WHITE);
+
+                  root = new FrameLayout(this);
+                  root.setBackgroundColor(Color.parseColor("#F7F7FB"));
+                  webView = new WebView(this);
+                  root.addView(webView, new FrameLayout.LayoutParams(
+                          FrameLayout.LayoutParams.MATCH_PARENT,
+                          FrameLayout.LayoutParams.MATCH_PARENT));
+                  setContentView(root);
+
+                  root.setOnApplyWindowInsetsListener((view, insets) -> {
+                      int topInset = Math.max(insets.getSystemWindowInsetTop(), 0);
+                      int bottomInset = Math.max(insets.getSystemWindowInsetBottom(), 0);
+                      view.setPadding(0, topInset, 0, bottomInset);
+                      return insets;
+                  });
+                  root.requestApplyInsets();
+
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setDatabaseEnabled(true);
+                  settings.setAllowFileAccess(true);
+                  settings.setAllowContentAccess(true);
+                  settings.setBuiltInZoomControls(false);
+                  settings.setDisplayZoomControls(false);
+                  settings.setSupportZoom(false);
+                  settings.setTextZoom(100);
+                  settings.setUserAgentString(settings.getUserAgentString() + " Spendbook/1.0.0 (Android)");
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) settings.setSafeBrowsingEnabled(true);
+
+                  webView.setWebViewClient(new WebViewClient() {
+                      @Override
+                      public void onPageFinished(WebView view, String url) {
+                          currentPageUrl = url == null ? "" : url;
+                          super.onPageFinished(view, url);
+                      }
+
+                      @Override
+                      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                          Uri uri = request.getUrl();
+                          String scheme = uri.getScheme();
+                          String host = uri.getHost();
+                          if ("about".equalsIgnoreCase(scheme)
+                                  || "file".equalsIgnoreCase(scheme)
+                                  || APP_HOST.equalsIgnoreCase(host)
+                                  || AUTH_REDIRECT_HOST.equalsIgnoreCase(host)) {
+                              return false;
+                          }
+                          try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); }
+                          catch (Exception ignored) { }
+                          return true;
+                      }
+                  });
+
+                  webView.addJavascriptInterface(new AndroidBridge(), "Android");
+                  webView.setWebChromeClient(new WebChromeClient() {
+                      @Override
+                      public boolean onShowFileChooser(WebView webView,
+                                                       ValueCallback<Uri[]> callback,
+                                                       FileChooserParams params) {
+                          if (filePathCallback != null) filePathCallback.onReceiveValue(null);
+                          filePathCallback = callback;
+                          try {
+                              Intent intent = params.createIntent();
+                              intent.addCategory(Intent.CATEGORY_OPENABLE);
+                              startActivityForResult(intent, FILE_CHOOSER_REQUEST);
+                              return true;
+                          } catch (Exception e) {
+                              filePathCallback = null;
+                              Toast.makeText(MainActivity.this, "無法開啟檔案選擇器", Toast.LENGTH_SHORT).show();
+                              return false;
+                          }
+                      }
+                  });
+
+                  webView.loadUrl(START_URL);
+                  loadOAuthCallback(getIntent());
+
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                      getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                              OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+                              this::handleAppBack);
+                  }
+              }
+
+              @Override
+              protected void onNewIntent(Intent intent) {
+                  super.onNewIntent(intent);
+                  setIntent(intent);
+                  loadOAuthCallback(intent);
+              }
+
+              private void loadOAuthCallback(Intent intent) {
+                  Uri uri = intent == null ? null : intent.getData();
+                  if (uri != null
+                          && "spendbook".equalsIgnoreCase(uri.getScheme())
+                          && "auth-callback".equalsIgnoreCase(uri.getHost())) {
+                      StringBuilder target = new StringBuilder(START_URL);
+                      if (uri.getEncodedQuery() != null) target.append('?').append(uri.getEncodedQuery());
+                      if (uri.getEncodedFragment() != null) target.append('#').append(uri.getEncodedFragment());
+                      webView.loadUrl(target.toString());
+                  }
+              }
+
+              @Override
+              protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  super.onActivityResult(requestCode, resultCode, data);
+                  if (requestCode == FILE_CHOOSER_REQUEST && filePathCallback != null) {
+                      Uri[] result = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
+                      filePathCallback.onReceiveValue(result);
+                      filePathCallback = null;
+                  }
+              }
+
+              private void launchGoogleAuthTab(String url) {
+                  try {
+                      Uri authUri = Uri.parse(url);
+                      if (!"https".equalsIgnoreCase(authUri.getScheme())) throw new IllegalArgumentException();
+                      AuthTabIntent authTabIntent = new AuthTabIntent.Builder().build();
+                      authTabIntent.launch(authTabLauncher, authUri, AUTH_REDIRECT_HOST, AUTH_REDIRECT_PATH);
+                  } catch (Exception e) {
+                      Toast.makeText(this, "無法開啟 Google 登入", Toast.LENGTH_SHORT).show();
+                  }
+              }
+
+              private void handleAuthResult(AuthTabIntent.AuthResult result) {
+                  if (result.resultCode == AuthTabIntent.RESULT_OK && result.resultUri != null) {
+                      Uri callback = result.resultUri;
+                      if (!"https".equalsIgnoreCase(callback.getScheme())
+                              || !AUTH_REDIRECT_HOST.equalsIgnoreCase(callback.getHost())) {
+                          Toast.makeText(this, "登入回傳網址不正確，請再試一次", Toast.LENGTH_LONG).show();
+                          return;
+                      }
+                      StringBuilder target = new StringBuilder(START_URL);
+                      if (callback.getEncodedQuery() != null) target.append('?').append(callback.getEncodedQuery());
+                      if (callback.getEncodedFragment() != null) target.append('#').append(callback.getEncodedFragment());
+                      webView.loadUrl(target.toString());
+                      return;
+                  }
+                  if (result.resultCode == AuthTabIntent.RESULT_CANCELED) return;
+                  Toast.makeText(this, "登入未完成，請再試一次", Toast.LENGTH_LONG).show();
+              }
+
+              private void handleAppBack() {
+                  if (webView == null) { finish(); return; }
+                  webView.evaluateJavascript(
+                          "(function(){try{return window.handleAndroidBack ? !!window.handleAndroidBack() : false;}catch(e){return false;}})();",
+                          value -> { if (!"true".equals(value)) finish(); });
+              }
+
+              @Override
+              @SuppressWarnings("deprecation")
+              public void onBackPressed() { handleAppBack(); }
+
+              @Override
+              public boolean dispatchKeyEvent(KeyEvent event) {
+                  if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
+                      handleAppBack();
+                      return true;
+                  }
+                  return super.dispatchKeyEvent(event);
+              }
+
+              private boolean isTrustedSpendbookPage() {
+                  try {
+                      Uri uri = Uri.parse(currentPageUrl == null ? "" : currentPageUrl);
+                      return "https".equalsIgnoreCase(uri.getScheme())
+                              && APP_HOST.equalsIgnoreCase(uri.getHost())
+                              && uri.getPath() != null
+                              && uri.getPath().startsWith(APP_PATH_PREFIX);
+                  } catch (Exception e) { return false; }
+              }
+
+              private class AndroidBridge {
+                  @JavascriptInterface
+                  public void saveAuthSession(String accessToken, String refreshToken) {
+                      if (!isTrustedSpendbookPage()) return;
+                      if (accessToken == null || accessToken.isEmpty() || refreshToken == null || refreshToken.isEmpty()) return;
+                      getSharedPreferences(AUTH_PREFS, MODE_PRIVATE).edit()
+                              .putString("access_token", accessToken)
+                              .putString("refresh_token", refreshToken)
+                              .apply();
+                  }
+
+                  @JavascriptInterface
+                  public String loadAuthSession() {
+                      if (!isTrustedSpendbookPage()) return "{}";
+                      try {
+                          SharedPreferences prefs = getSharedPreferences(AUTH_PREFS, MODE_PRIVATE);
+                          JSONObject out = new JSONObject();
+                          out.put("access_token", prefs.getString("access_token", ""));
+                          out.put("refresh_token", prefs.getString("refresh_token", ""));
+                          return out.toString();
+                      } catch (Exception e) { return "{}"; }
+                  }
+
+                  @JavascriptInterface
+                  public void clearAuthSession() {
+                      if (!isTrustedSpendbookPage()) return;
+                      getSharedPreferences(AUTH_PREFS, MODE_PRIVATE).edit().clear().apply();
+                  }
+
+                  @JavascriptInterface
+                  public void openGoogleLogin(String url) {
+                      runOnUiThread(() -> launchGoogleAuthTab(url));
+                  }
+
+                  @JavascriptInterface
+                  public void saveFile(String filename, String content, String mimeType) {
+                      try {
+                          if (!isTrustedSpendbookPage()) return;
+                          if (filename == null || filename.trim().isEmpty()) filename = "我的消費簿備份.json";
+                          if (content == null) content = "";
+                          if (mimeType == null || mimeType.isEmpty()) mimeType = "application/json";
+
+                          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                              ContentValues values = new ContentValues();
+                              values.put(MediaStore.Downloads.DISPLAY_NAME, filename);
+                              values.put(MediaStore.Downloads.MIME_TYPE, mimeType);
+                              values.put(MediaStore.Downloads.RELATIVE_PATH,
+                                      Environment.DIRECTORY_DOWNLOADS + File.separator + "我的消費簿");
+                              Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                              if (uri == null) throw new IllegalStateException("無法建立下載檔案");
+                              try (OutputStream out = getContentResolver().openOutputStream(uri)) {
+                                  if (out == null) throw new IllegalStateException("無法寫入檔案");
+                                  out.write(content.getBytes(StandardCharsets.UTF_8));
+                              }
+                          } else {
+                              File dir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                              if (dir == null) throw new IllegalStateException("無法存取下載資料夾");
+                              File outFile = new File(dir, filename);
+                              try (FileOutputStream out = new FileOutputStream(outFile)) {
+                                  out.write(content.getBytes(StandardCharsets.UTF_8));
+                              }
+                          }
+                          runOnUiThread(() -> Toast.makeText(MainActivity.this,
+                                  "已儲存到 Downloads/我的消費簿", Toast.LENGTH_LONG).show());
+                      } catch (Exception e) {
+                          runOnUiThread(() -> Toast.makeText(MainActivity.this,
+                                  "匯出失敗：" + e.getMessage(), Toast.LENGTH_LONG).show());
+                      }
+                  }
+              }
+          }
+          EOF
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('spendbook/cloud.js')
+          s=p.read_text(encoding='utf-8')
+          old="const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);"
+          new="const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});"
+          if old in s:
+              s=s.replace(old,new,1)
+
+          anchor="const el=id=>document.getElementById(id);"
+          native="""const el=id=>document.getElementById(id);\nfunction saveNativeSession(s){try{if(window.Android&&typeof Android.saveAuthSession==='function'&&s?.access_token&&s?.refresh_token)Android.saveAuthSession(s.access_token,s.refresh_token)}catch{}}\nasync function restoreNativeSession(){try{if(!(window.Android&&typeof Android.loadAuthSession==='function'))return null;const raw=JSON.parse(Android.loadAuthSession()||'{}');if(!raw.access_token||!raw.refresh_token)return null;const {data,error}=await db.auth.setSession({access_token:raw.access_token,refresh_token:raw.refresh_token});if(error||!data?.session)return null;saveNativeSession(data.session);return data.session}catch(e){console.warn('native auth restore failed',e);return null}}\nfunction clearNativeSession(){try{if(window.Android&&typeof Android.clearAuthSession==='function')Android.clearAuthSession()}catch{}}"""
+          if 'function saveNativeSession' not in s:
+              if anchor not in s: raise SystemExit('cloud native anchor missing')
+              s=s.replace(anchor,native,1)
+
+          auth_pattern=r"async function signInWithGoogle\(\)\{.*?\}\nwindow\.handleAndroidOAuthCallback=url=>\{if\(url\)location\.replace\(url\)\};"
+          auth_repl="""async function signInWithGoogle(){setMessage('');try{const inAndroid=!!(window.Android&&typeof Android.openGoogleLogin==='function');const redirectTo=inAndroid?'https://save-radar-gold.vercel.app/login?source=spendbook':location.origin+location.pathname;const {data,error}=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo,skipBrowserRedirect:inAndroid}});if(error)throw error;if(inAndroid){if(!data?.url)throw new Error('無法取得 Google 登入網址。');Android.openGoogleLogin(data.url)}}catch(e){setMessage(e.message||'Google 登入目前無法使用，請先用原本 Email／密碼登入。')}}\nwindow.handleAndroidOAuthCallback=url=>{if(!url)return;try{const callback=new URL(url);location.replace(location.origin+location.pathname+callback.search+callback.hash)}catch(e){setMessage('Google 登入回傳資料無法讀取，請再試一次。')}};"""
+          s,n=re.subn(auth_pattern,auth_repl,s,count=1,flags=re.S)
+          if n!=1 and 'source=spendbook' not in s: raise SystemExit('google auth patch failed')
+
+          old_logout="async function logout(){await db.auth.signOut();session=null;showApp(false);setMessage('已登出。')}"
+          new_logout="async function logout(){clearNativeSession();await db.auth.signOut();session=null;showApp(false);setMessage('已登出。')}"
+          if old_logout in s: s=s.replace(old_logout,new_logout,1)
+
+          old_init="(async()=>{const {data}=await db.auth.getSession();session=data.session||null;if(session)await initialSync();else showApp(false)})();"
+          new_init="(async()=>{const {data}=await db.auth.getSession();session=data.session||null;if(!session)session=await restoreNativeSession();if(session){saveNativeSession(session);await initialSync()}else showApp(false)})();"
+          if old_init in s: s=s.replace(old_init,new_init,1)
+
+          old_state="db.auth.onAuthStateChange(async(_event,newSession)=>{if(newSession&&!session){session=newSession;await initialSync()}else if(!newSession&&session){session=null;showApp(false)}});"
+          new_state="db.auth.onAuthStateChange(async(_event,newSession)=>{if(newSession){saveNativeSession(newSession);if(!session){session=newSession;await initialSync()}else session=newSession}else if(session){clearNativeSession();session=null;showApp(false)}});"
+          if old_state in s: s=s.replace(old_state,new_state,1)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('spendbook/app.html')
+          s=p.read_text(encoding='utf-8')
+          old="function exportBackup(){const blob=new Blob([JSON.stringify({app:'我的消費簿',version:1,exportedAt:new Date().toISOString(),records},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='我的消費簿備份_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}"
+          new="function exportBackup(){const content=JSON.stringify({app:'我的消費簿',version:1,exportedAt:new Date().toISOString(),records},null,2),filename='我的消費簿備份_'+new Date().toISOString().slice(0,10)+'.json';if(window.Android&&typeof Android.saveFile==='function'){Android.saveFile(filename,content,'application/json');return}const blob=new Blob([content],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}"
+          if old in s: s=s.replace(old,new,1)
+          if 'window.handleAndroidBack=' not in s:
+              marker="if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});render();calc();"
+              back="window.handleAndroidBack=()=>{const open=document.querySelector('.sheet-backdrop.show');if(open){open.classList.remove('show');return true}const active=document.querySelector('.page.active');if(active&&active.id!=='home'){go('home');return true}return false};\n"+marker
+              if marker not in s: raise SystemExit('app back marker missing')
+              s=s.replace(marker,back,1)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('spendbook/index.html')
+          s=p.read_text(encoding='utf-8')
+          if 'window.handleAndroidBack=' not in s:
+              marker='<script src="./cloud.js?v=google-login-20260909"></script>'
+              bridge='<script>window.handleAndroidBack=()=>{try{const f=document.getElementById("appFrame").contentWindow;return !!(f&&f.handleAndroidBack&&f.handleAndroidBack())}catch{return false}}</script>\n'+marker
+              if marker not in s:
+                  marker='<script src="./cloud.js"></script>'
+                  bridge='<script>window.handleAndroidBack=()=>{try{const f=document.getElementById("appFrame").contentWindow;return !!(f&&f.handleAndroidBack&&f.handleAndroidBack())}catch{return false}}</script>\n'+marker
+              if marker not in s: raise SystemExit('index bridge marker missing')
+              s=s.replace(marker,bridge,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Commit Spendbook Android source
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add android/spendbook spendbook/cloud.js spendbook/app.html spendbook/index.html
+          git diff --cached --check
+          git commit -m 'Add 我的消費簿 Android v1.0.0' || exit 0
+          git push
