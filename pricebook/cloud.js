@@ -65,8 +65,11 @@ function setMode(next){authMode=next;$('loginTab').classList.toggle('on',next===
 async function signInWithGoogle(){
   setMessage('');
   try{
-    const redirectTo=location.origin+location.pathname;
     const inAndroid=!!(window.Android&&typeof Android.openGoogleLogin==='function');
+    // Android Auth Tab 必須監聽 Supabase 已允許的實際回程網址。
+    // 原本要求 GitHub Pages 回程時，Supabase 會因白名單不符而退回 Site URL，
+    // 導致瀏覽器停在收藏雷達。App 收到此網址後只會轉交登入憑證給比價簿。
+    const redirectTo=inAndroid?'https://save-radar-gold.vercel.app/':location.origin+location.pathname;
     const {data,error}=await dbClient.auth.signInWithOAuth({provider:'google',options:{redirectTo,skipBrowserRedirect:inAndroid}});
     if(error)throw error;
     if(inAndroid){
