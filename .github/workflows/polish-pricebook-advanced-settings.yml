@@ -1,0 +1,41 @@
+name: Polish Pricebook advanced settings
+
+on:
+  push:
+    paths:
+      - '.github/workflows/polish-pricebook-advanced-settings.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refine advanced settings UI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('pricebook/app.html')
+          s=p.read_text(encoding='utf-8')
+
+          old_css='.danger{color:var(--bad)!important}.danger-zone{border:1px solid #F0D8D4;border-radius:15px;background:#FFF9F7;overflow:hidden}.danger-zone summary{list-style:none;padding:12px 13px;font-weight:800;color:#8F5C55;cursor:pointer}.danger-zone summary::-webkit-details-marker{display:none}.danger-zone-body{border-top:1px solid #F1E2DE;padding:13px}'
+          new_css='.danger{color:var(--bad)!important}.danger-zone{border:0;background:transparent}.danger-zone summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0;cursor:pointer;color:var(--text)}.danger-zone summary::-webkit-details-marker{display:none}.danger-summary-text{min-width:0}.danger-summary-text b{display:block;font-size:14px}.danger-summary-text small{display:block;margin-top:3px;color:var(--muted);font-size:11px;font-weight:500}.danger-chevron{font-size:22px;line-height:1;color:#9AA39E;transition:transform .15s}.danger-zone[open] .danger-chevron{transform:rotate(90deg)}.danger-zone-body{margin-top:12px;border:1px solid #F0D8D4;border-radius:14px;background:#FFF9F7;padding:12px}.danger-action{width:100%;margin-top:11px;background:#fff!important;border:1px solid #E4BBB5!important;color:#A14F47!important}'
+          if old_css not in s: raise SystemExit('old danger css not found')
+          s=s.replace(old_css,new_css,1)
+
+          old_html='''  <div class="panel">\n    <h3 class="panel-title"><svg class="ui-icon"><use href="#i-trash"></use></svg>進階設定</h3>\n    <details class="danger-zone">\n      <summary>危險操作</summary>\n      <div class="danger-zone-body">\n        <div style="font-weight:800;color:#A14F47;margin-bottom:5px">清除本機與雲端資料</div>\n        <div class="smallnote">會清除目前帳號的商品與價格紀錄，並同步到其他裝置；執行前會先建立備份。</div>\n        <button class="btn ghost danger" id="clearAll" style="width:100%;margin-top:12px">清除本機與雲端資料</button>\n      </div>\n    </details>\n    <div class="version-note">比價簿 v1.6.7</div>\n  </div>'''
+          new_html='''  <div class="panel">\n    <h3 class="panel-title"><svg class="ui-icon"><use href="#i-settings"></use></svg>進階設定</h3>\n    <details class="danger-zone">\n      <summary>\n        <span class="danger-summary-text"><b>資料清除</b><small>需要重置比價簿時再使用</small></span>\n        <span class="danger-chevron">›</span>\n      </summary>\n      <div class="danger-zone-body">\n        <div style="font-weight:800;color:#A14F47;margin-bottom:5px">清除本機與雲端資料</div>\n        <div class="smallnote">會清除目前帳號的商品與價格紀錄，並同步到其他裝置；執行前會先建立備份。</div>\n        <button class="btn danger-action" id="clearAll">清除本機與雲端資料</button>\n      </div>\n    </details>\n    <div class="version-note">比價簿 v1.6.7</div>\n  </div>'''
+          if old_html not in s: raise SystemExit('old advanced settings html not found')
+          s=s.replace(old_html,new_html,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit UI cleanup
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pricebook/app.html
+          git diff --cached --check
+          git commit -m 'Polish Pricebook advanced settings' || exit 0
+          git push
