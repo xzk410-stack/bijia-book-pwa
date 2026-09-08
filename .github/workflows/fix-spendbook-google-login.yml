@@ -1,0 +1,58 @@
+name: Fix Spendbook Google login entry
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-spendbook-google-login.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fix old Spendbook shortcuts and refresh auth shell
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          # Old shortcuts may still point directly to app.html and therefore bypass the login shell.
+          p=Path('spendbook/app.html')
+          s=p.read_text(encoding='utf-8')
+          marker='<head>\n'
+          guard='''<head>\n<script>\nif(window.top===window.self){\n  const u=new URL('./',location.href);\n  u.search=location.search;\n  u.hash=location.hash;\n  location.replace(u.href);\n}\n</script>\n'''
+          if 'window.top===window.self' not in s:
+            if marker not in s: raise SystemExit('app head marker not found')
+            s=s.replace(marker,guard,1)
+          p.write_text(s,encoding='utf-8')
+
+          # Make the auth shell explicitly installable and force the newest cloud login script.
+          p=Path('spendbook/index.html')
+          s=p.read_text(encoding='utf-8')
+          if '<meta http-equiv="Cache-Control"' not in s:
+            s=s.replace('<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
+                        '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">',1)
+          if '<link rel="manifest"' not in s:
+            s=s.replace('<link rel="icon" href="./icon.svg" type="image/svg+xml">',
+                        '<link rel="icon" href="./icon.svg" type="image/svg+xml">\n<link rel="manifest" href="./manifest.webmanifest">',1)
+          s=s.replace('<script src="./cloud.js"></script>', '<script src="./cloud.js?v=google-login-20260909"></script>\n<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js?v=4").catch(()=>{})}</script>',1)
+          p.write_text(s,encoding='utf-8')
+
+          # Bump service-worker cache so installed shortcuts cannot stay on an older login page.
+          p=Path('spendbook/sw.js')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("const CACHE='spendbook-v3';","const CACHE='spendbook-v4';",1)
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Commit Spendbook Google login fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add spendbook/app.html spendbook/index.html spendbook/sw.js
+          git diff --cached --check
+          git commit -m 'Fix 我的消費簿 Google login entry' || exit 0
+          git push
