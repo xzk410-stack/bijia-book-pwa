@@ -1,0 +1,48 @@
+name: Publish Android v1.6.3
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/publish-android-v163.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild and verify signed APK
+        run: |
+          mkdir -p release
+          cat .release/v1.6.3/part*.b64 | base64 --decode > release/bijiabu-v1.6.3.apk
+          echo '97d22df9a932ee3027b1332ac7bb88733a6620363253516a292307f594040e43  release/bijiabu-v1.6.3.apk' | sha256sum -c -
+
+      - name: Publish APK files
+        run: |
+          mkdir -p downloads
+          cp release/bijiabu-v1.6.3.apk downloads/bijiabu-1.6.3.apk
+          cp release/bijiabu-v1.6.3.apk downloads/bijiabu-latest.apk
+          git rm -r .release/v1.6.3
+          git add downloads/bijiabu-1.6.3.apk downloads/bijiabu-latest.apk
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Publish 比價簿 Android v1.6.3'
+          git push
+
+      - name: Create public Android release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG='android-v1.6.3'
+          APK='release/bijiabu-v1.6.3.apk'
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" --clobber
+          else
+            gh release create "$TAG" "$APK" \
+              --title '比價簿 Android v1.6.3' \
+              --notes '修正 Google 登入完成後未自動返回比價簿；保留原套件與簽章，可直接覆蓋更新。'
+          fi
