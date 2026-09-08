@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@mipmap/icon_cat1"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme"
+        android:enableOnBackInvokedCallback="true"
+        android:usesCleartextTraffic="false">
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode_ui" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="portrait" />
+        <activity-alias android:name=".IconCat1" android:targetActivity=".MainActivity" android:enabled="true" android:exported="true" android:icon="@mipmap/icon_cat1" android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".IconCat2" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/icon_cat2" android:label="@string/app_name"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity-alias>
+        <activity-alias android:name=".IconRabbit1" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/icon_rabbit1" android:label="@string/app_name"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity-alias>
+        <activity-alias android:name=".IconRabbit2" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/icon_rabbit2" android:label="@string/app_name"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity-alias>
+        <activity-alias android:name=".IconBear1" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/icon_bear1" android:label="@string/app_name"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity-alias>
+        <activity-alias android:name=".IconHamster" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/icon_hamster" android:label="@string/app_name"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity-alias>
+        <activity-alias android:name=".IconBear2" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/icon_bear2" android:label="@string/app_name"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity-alias>
+        <activity-alias android:name=".IconHelper" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/icon_helper" android:label="@string/app_name"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity-alias>
+        <activity-alias android:name=".IconGirl" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/icon_girl" android:label="@string/app_name"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity-alias>
+    </application>
+</manifest>

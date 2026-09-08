@@ -13,7 +13,8 @@ function dateMs(v){const x=Date.parse(v);return Number.isFinite(x)?x:0}
 function stableKey(r){return n(r.createdAt)?`t:${n(r.createdAt)}`:`f:${[r.name||'',r.seller||'',r.total||0,r.status||'',r.shipdate||''].join('|')}`}
 function mergePreferSecond(first,second){const map=new Map();for(const r of first||[])map.set(stableKey(r),r);for(const r of second||[])map.set(stableKey(r),r);return [...map.values()].sort((a,b)=>n(b.createdAt)-n(a.createdAt))}
 function paymentFingerprint(p){return [n(p.amount).toFixed(2),p.method||'',p.date||''].join('|')}
-async function signInWithGoogle(){setMessage('');try{const redirectTo=location.origin+location.pathname;const {error}=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo}});if(error)throw error}catch(e){setMessage(e.message||'Google 登入目前無法使用，請先用原本 Email／密碼登入。')}}
+async function signInWithGoogle(){setMessage('');try{const redirectTo=location.origin+location.pathname;const inAndroid=!!(window.Android&&typeof Android.openGoogleLogin==='function');const {data,error}=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo,skipBrowserRedirect:inAndroid}});if(error)throw error;if(inAndroid){if(!data?.url)throw new Error('無法取得 Google 登入網址。');Android.openGoogleLogin(data.url)}}catch(e){setMessage(e.message||'Google 登入目前無法使用，請先用原本 Email／密碼登入。')}}
+window.handleAndroidOAuthCallback=url=>{if(url)location.replace(url)};
 async function fetchCloudBundle(){
   const [{data:rows,error:rErr},{data:pays,error:pErr}]=await Promise.all([
     db.from('spend_records').select('*').is('deleted_at',null).order('created_at',{ascending:false}),

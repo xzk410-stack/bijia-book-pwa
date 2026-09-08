@@ -1,0 +1,5 @@
+<resources>
+    <color name="app_bg">#F8F4EC</color>
+    <color name="app_primary">#4F8B68</color>
+    <color name="app_primary_dark">#397656</color>
+</resources>
