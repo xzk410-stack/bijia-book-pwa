@@ -1,0 +1,63 @@
+name: Fix 比價簿 Android system insets v1.6.6
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-android-system-insets-v166.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch Android safe areas and bump version
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          java = Path('android/pricebook/app/src/main/java/com/bijiabu/app/MainActivity.java')
+          s = java.read_text()
+
+          s = s.replace(
+              'import android.widget.Toast;\n',
+              'import android.widget.Toast;\nimport android.widget.FrameLayout;\n'
+          )
+
+          s = s.replace(
+              '    private WebView webView;\n',
+              '    private WebView webView;\n    private FrameLayout root;\n'
+          )
+
+          old = '''        webView = new WebView(this);\n        setContentView(webView);\n'''
+          new = '''        root = new FrameLayout(this);\n        root.setBackgroundColor(Color.parseColor("#F8F4EC"));\n        webView = new WebView(this);\n        root.addView(webView, new FrameLayout.LayoutParams(\n                FrameLayout.LayoutParams.MATCH_PARENT,\n                FrameLayout.LayoutParams.MATCH_PARENT\n        ));\n        setContentView(root);\n\n        // Android 15+ 會強制 edge-to-edge；把 WebView 放進系統安全區，\n        // 避免頂部狀態列與底部導覽列蓋住比價簿的固定工具列。\n        root.setOnApplyWindowInsetsListener((view, insets) -> {\n            int topInset = Math.max(insets.getSystemWindowInsetTop(), 0);\n            int bottomInset = Math.max(insets.getSystemWindowInsetBottom(), 0);\n            view.setPadding(0, topInset, 0, bottomInset);\n            return insets;\n        });\n        root.requestApplyInsets();\n'''
+          if old not in s:
+              raise SystemExit('expected WebView setup block not found')
+          s = s.replace(old, new, 1)
+          s = s.replace(' BijiaBook/1.6.5 (Android)', ' BijiaBook/1.6.6 (Android)')
+          java.write_text(s)
+
+          gradle = Path('android/pricebook/app/build.gradle.kts')
+          g = gradle.read_text()
+          g = g.replace('versionCode = 25', 'versionCode = 26')
+          g = g.replace('versionName = "1.6.5"', 'versionName = "1.6.6"')
+          gradle.write_text(g)
+          PY
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add android/pricebook/app/src/main/java/com/bijiabu/app/MainActivity.java android/pricebook/app/build.gradle.kts
+          if git diff --cached --quiet; then
+            echo 'No changes needed'
+          else
+            git commit -m 'Fix Android safe areas and bump 比價簿 to v1.6.6'
+            git push
+          fi
