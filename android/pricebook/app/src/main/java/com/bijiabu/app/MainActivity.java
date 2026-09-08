@@ -48,8 +48,8 @@ public class MainActivity extends ComponentActivity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private static final int CLOUD_SAVE_REQUEST = 1002;
     private static final String START_URL = "https://xzk410-stack.github.io/bijia-book-pwa/pricebook/";
-    private static final String AUTH_REDIRECT_HOST = "xzk410-stack.github.io";
-    private static final String AUTH_REDIRECT_PATH = "/bijia-book-pwa/pricebook/";
+    private static final String AUTH_REDIRECT_HOST = "save-radar-gold.vercel.app";
+    private static final String AUTH_REDIRECT_PATH = "/";
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
     private GmsBarcodeScanner barcodeScanner;
@@ -84,7 +84,7 @@ public class MainActivity extends ComponentActivity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
         settings.setTextZoom(100);
-        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.2 (Android)");
+        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.3 (Android)");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             settings.setSafeBrowsingEnabled(true);
         }
@@ -204,7 +204,21 @@ public class MainActivity extends ComponentActivity {
 
     private void handleAuthResult(AuthTabIntent.AuthResult result) {
         if (result.resultCode == AuthTabIntent.RESULT_OK && result.resultUri != null) {
-            webView.loadUrl(result.resultUri.toString());
+            Uri callback = result.resultUri;
+            if (!"https".equalsIgnoreCase(callback.getScheme())
+                    || !AUTH_REDIRECT_HOST.equalsIgnoreCase(callback.getHost())) {
+                Toast.makeText(this, "登入回傳網址不正確，請再試一次", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            StringBuilder target = new StringBuilder(START_URL);
+            if (callback.getEncodedQuery() != null) {
+                target.append('?').append(callback.getEncodedQuery());
+            }
+            if (callback.getEncodedFragment() != null) {
+                target.append('#').append(callback.getEncodedFragment());
+            }
+            webView.loadUrl(target.toString());
             return;
         }
         if (result.resultCode == AuthTabIntent.RESULT_CANCELED) return;
