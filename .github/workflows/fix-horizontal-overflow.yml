@@ -1,0 +1,42 @@
+name: Fix 比價簿 horizontal overflow
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-horizontal-overflow.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lock layout to viewport width
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('pricebook/app.html')
+          s = p.read_text(encoding='utf-8')
+          marker = '/* horizontal-overflow-fix-v1 */'
+          if marker in s:
+              raise SystemExit(0)
+          css = '''\n/* horizontal-overflow-fix-v1 */\nhtml,body{width:100%;max-width:100%;overflow-x:hidden;overscroll-behavior-x:none}\n.app,header,main,.view,.panel,.product,.hero{width:100%;max-width:100%;min-width:0}\n.brand,.search,.product-top,.pactions,.section-title,.chart-head,.hhead{min-width:0}\n.search input,.pmain,.price-box,.stat,.summarybox,.field,.rank-row>*{min-width:0}\n.stats{grid-template-columns:repeat(3,minmax(0,1fr))}\n.price-row{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr)}\n.form-grid,.summary4,.settings-actions,.segment{grid-template-columns:repeat(2,minmax(0,1fr))}\nnav{max-width:100vw}\n.fab{max-width:calc(100vw - 36px)}\n.chart-wrap svg{max-width:100%;overflow:hidden}\n''' 
+          idx = s.find('</style>')
+          if idx < 0:
+              raise SystemExit('style end not found')
+          s = s[:idx] + css + s[idx:]
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit change
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pricebook/app.html
+          git diff --cached --quiet || git commit -m 'Fix 比價簿 horizontal page overflow'
+          git push
