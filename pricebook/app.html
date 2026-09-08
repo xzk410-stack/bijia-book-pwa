@@ -192,6 +192,18 @@ nav{padding:7px 9px calc(8px + env(safe-area-inset-bottom));border-top:1px solid
 .scanner-error.show{display:block}
 @media(max-width:420px){.scanner-actions{grid-template-columns:1fr}}
 
+
+/* horizontal-overflow-fix-v1 */
+html,body{width:100%;max-width:100%;overflow-x:hidden;overscroll-behavior-x:none}
+.app,header,main,.view,.panel,.product,.hero{width:100%;max-width:100%;min-width:0}
+.brand,.search,.product-top,.pactions,.section-title,.chart-head,.hhead{min-width:0}
+.search input,.pmain,.price-box,.stat,.summarybox,.field,.rank-row>*{min-width:0}
+.stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.price-row{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr)}
+.form-grid,.summary4,.settings-actions,.segment{grid-template-columns:repeat(2,minmax(0,1fr))}
+nav{max-width:100vw}
+.fab{max-width:calc(100vw - 36px)}
+.chart-wrap svg{max-width:100%;overflow:hidden}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
