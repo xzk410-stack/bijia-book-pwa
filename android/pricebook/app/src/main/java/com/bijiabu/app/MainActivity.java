@@ -84,7 +84,7 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
         settings.setTextZoom(100);
-        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.0 (Android)");
+        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.1 (Android)");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             settings.setSafeBrowsingEnabled(true);
         }
@@ -130,12 +130,36 @@ public class MainActivity extends Activity {
         });
 
         webView.loadUrl(START_URL);
+        loadOAuthCallback(getIntent());
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT,
                     this::handleAppBack
             );
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        loadOAuthCallback(intent);
+    }
+
+    private void loadOAuthCallback(Intent intent) {
+        Uri uri = intent == null ? null : intent.getData();
+        if (uri != null
+                && "bijiabu".equalsIgnoreCase(uri.getScheme())
+                && "auth-callback".equalsIgnoreCase(uri.getHost())) {
+            StringBuilder target = new StringBuilder(START_URL);
+            if (uri.getEncodedQuery() != null) {
+                target.append('?').append(uri.getEncodedQuery());
+            }
+            if (uri.getEncodedFragment() != null) {
+                target.append('#').append(uri.getEncodedFragment());
+            }
+            webView.loadUrl(target.toString());
         }
     }
 

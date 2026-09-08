@@ -75,7 +75,13 @@ async function signInWithGoogle(){
     }
   }catch(e){setMessage(e.message||'Google 登入目前無法使用，請先用原本 Email／密碼登入。')}
 }
-window.handleAndroidOAuthCallback=url=>{if(url)location.replace(url)};
+window.handleAndroidOAuthCallback=url=>{
+  if(!url)return;
+  try{
+    const callback=new URL(url);
+    location.replace(location.origin+location.pathname+callback.search+callback.hash);
+  }catch(e){setMessage('Google 登入回傳資料無法讀取，請再試一次。')}
+};
 
 async function fetchCloudRow(){const {data,error}=await dbClient.from('pricebook_cloud').select('snapshot,updated_at').maybeSingle();if(error)throw error;return data?{snapshot:normalizeSnapshot(data.snapshot),updated_at:data.updated_at}:null}
 async function createCloudBackup(snapshot,label='自動備份',force=false){if(!session||!snapshot)return;if(!force){const {data:last,error:lastErr}=await dbClient.from('pricebook_cloud_backups').select('created_at').order('created_at',{ascending:false}).limit(1).maybeSingle();if(lastErr)throw lastErr;if(last?.created_at&&Date.now()-Date.parse(last.created_at)<15*60*1000)return}const {error}=await dbClient.from('pricebook_cloud_backups').insert({user_id:session.user.id,snapshot:normalizeSnapshot(snapshot),label});if(error)throw error;const {data:old,error:oldErr}=await dbClient.from('pricebook_cloud_backups').select('id').order('created_at',{ascending:false}).range(30,199);if(oldErr)throw oldErr;if(old?.length){const {error:delErr}=await dbClient.from('pricebook_cloud_backups').delete().in('id',old.map(x=>x.id));if(delErr)throw delErr}}

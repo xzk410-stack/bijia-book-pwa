@@ -9,4 +9,4 @@
 - `BIJIABU_KEY_ALIAS`
 - `BIJIABU_KEY_PASSWORD`
 
-目前網頁入口為 `https://xzk410-stack.github.io/bijia-book-pwa/pricebook/`。Android 的 Google 登入會由 Auth Tab 開啟，完成後把 HTTPS callback 送回原本的 WebView。
+目前網頁入口為 `https://xzk410-stack.github.io/bijia-book-pwa/pricebook/`。Android 的 Google 登入會由安全瀏覽器開啟；HTTPS 回呼頁收到結果後，會用 `bijiabu://auth-callback` 深層連結自動喚回原本的 App，再把登入結果載入 WebView。

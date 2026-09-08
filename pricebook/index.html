@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f7f5ef">
 <title>比價簿</title>
+<script>
+(() => {
+  const callbackPayload = location.search + location.hash;
+  const isOAuthReturn = /(?:^|[?#&])(code|access_token|error|error_code|error_description)=/i.test(callbackPayload);
+  const isAndroidBrowser = /Android/i.test(navigator.userAgent) && !/BijiaBook\//i.test(navigator.userAgent);
+  if (isOAuthReturn && isAndroidBrowser) {
+    location.replace('bijiabu://auth-callback' + location.search + location.hash);
+  }
+})();
+</script>
 <style>
 *{box-sizing:border-box}html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;background:#f7f5ef;color:#193a2d}button,input{font:inherit}button{cursor:pointer}body{overflow:hidden}.shell{height:100%;display:flex;flex-direction:column}.topbar{display:none;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;background:rgba(255,255,255,.97);border-bottom:1px solid #e7e2d8}.topbar.show{display:flex}.account{min-width:0}.account b{display:block;font-size:13px}.account small{display:block;color:#7d857e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}.tools{display:flex;align-items:center;gap:6px}.tools button{border:1px solid #dde6df;background:#fff;border-radius:11px;padding:7px 9px;font-size:11px;font-weight:750;color:#52635a}.sync{color:#2f7654!important;background:#eef7f0!important;border-color:#d5e8da!important}iframe{border:0;width:100%;flex:1;background:#f8f4ec}
 .auth{position:fixed;inset:0;display:flex;justify-content:center;align-items:flex-start;padding:max(22px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom));background:linear-gradient(180deg,#fbfaf6 0%,#f2f6f1 100%);z-index:20;overflow:auto}.auth.hidden{display:none}.card{width:min(420px,100%);margin:auto 0;background:rgba(255,255,255,.98);border:1px solid #e4e7e1;border-radius:26px;padding:22px;box-shadow:0 18px 52px rgba(48,78,61,.10)}
