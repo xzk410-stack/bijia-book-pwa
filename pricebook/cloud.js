@@ -65,16 +65,19 @@ function setMode(next){authMode=next;$('loginTab').classList.toggle('on',next===
 async function signInWithGoogle(){
   setMessage('');
   try{
-    const inAndroid=!!(window.Android&&typeof Android.openGoogleLogin==='function');
-    // Android Auth Tab 必須監聽 Supabase 已允許的實際回程網址。
-    // 原本要求 GitHub Pages 回程時，Supabase 會因白名單不符而退回 Site URL，
-    // 導致瀏覽器停在收藏雷達。App 收到此網址後只會轉交登入憑證給比價簿。
-    const redirectTo=inAndroid?'https://save-radar-gold.vercel.app/':location.origin+location.pathname;
+    const hasExternal=!!(window.Android&&typeof Android.openExternal==='function');
+    const hasAuthTab=!!(window.Android&&typeof Android.openGoogleLogin==='function');
+    const inAndroid=hasExternal||hasAuthTab;
+    // Android 改走一般 Chrome，再由收藏雷達入口頁轉成既有的
+    // bijiabu://auth-callback Deep Link 自動叫回比價簿。
+    // 這樣避開部分 Samsung/Chrome 對 HTTPS Auth Tab 驗證失敗的情況。
+    const redirectTo=inAndroid?'https://save-radar-gold.vercel.app/?source=bijiabu':location.origin+location.pathname;
     const {data,error}=await dbClient.auth.signInWithOAuth({provider:'google',options:{redirectTo,skipBrowserRedirect:inAndroid}});
     if(error)throw error;
     if(inAndroid){
       if(!data?.url)throw new Error('無法取得 Google 登入網址。');
-      Android.openGoogleLogin(data.url);
+      if(hasExternal)Android.openExternal(data.url);
+      else Android.openGoogleLogin(data.url);
     }
   }catch(e){setMessage(e.message||'Google 登入目前無法使用，請先用原本 Email／密碼登入。')}
 }
