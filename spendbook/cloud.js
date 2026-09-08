@@ -1,9 +1,12 @@
 const SUPABASE_URL='https://izvrvlufxajezukyvgue.supabase.co';
 const SUPABASE_KEY='sb_publishable_5BCOeBUUn-U5c8_i3LUqmQ_MZF5eIx_';
-const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const KEY='spend_records';
 let mode='login',session=null,syncTimer=null,dirty=false,initializing=false;
 const el=id=>document.getElementById(id);
+function saveNativeSession(s){try{if(window.Android&&typeof Android.saveAuthSession==='function'&&s?.access_token&&s?.refresh_token)Android.saveAuthSession(s.access_token,s.refresh_token)}catch{}}
+async function restoreNativeSession(){try{if(!(window.Android&&typeof Android.loadAuthSession==='function'))return null;const raw=JSON.parse(Android.loadAuthSession()||'{}');if(!raw.access_token||!raw.refresh_token)return null;const {data,error}=await db.auth.setSession({access_token:raw.access_token,refresh_token:raw.refresh_token});if(error||!data?.session)return null;saveNativeSession(data.session);return data.session}catch(e){console.warn('native auth restore failed',e);return null}}
+function clearNativeSession(){try{if(window.Android&&typeof Android.clearAuthSession==='function')Android.clearAuthSession()}catch{}}
 function setMessage(text=''){const m=el('message');m.textContent=text;m.hidden=!text}
 function setSync(text=''){el('syncStatus').textContent=text;const b=el('cloudState');if(b)b.textContent=text||'雲端同步'}
 function getLocal(){try{const x=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(x)?x:[]}catch{return[]}}
@@ -13,8 +16,8 @@ function dateMs(v){const x=Date.parse(v);return Number.isFinite(x)?x:0}
 function stableKey(r){return n(r.createdAt)?`t:${n(r.createdAt)}`:`f:${[r.name||'',r.seller||'',r.total||0,r.status||'',r.shipdate||''].join('|')}`}
 function mergePreferSecond(first,second){const map=new Map();for(const r of first||[])map.set(stableKey(r),r);for(const r of second||[])map.set(stableKey(r),r);return [...map.values()].sort((a,b)=>n(b.createdAt)-n(a.createdAt))}
 function paymentFingerprint(p){return [n(p.amount).toFixed(2),p.method||'',p.date||''].join('|')}
-async function signInWithGoogle(){setMessage('');try{const redirectTo=location.origin+location.pathname;const inAndroid=!!(window.Android&&typeof Android.openGoogleLogin==='function');const {data,error}=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo,skipBrowserRedirect:inAndroid}});if(error)throw error;if(inAndroid){if(!data?.url)throw new Error('無法取得 Google 登入網址。');Android.openGoogleLogin(data.url)}}catch(e){setMessage(e.message||'Google 登入目前無法使用，請先用原本 Email／密碼登入。')}}
-window.handleAndroidOAuthCallback=url=>{if(url)location.replace(url)};
+async function signInWithGoogle(){setMessage('');try{const inAndroid=!!(window.Android&&typeof Android.openGoogleLogin==='function');const redirectTo=inAndroid?'https://save-radar-gold.vercel.app/login?source=spendbook':location.origin+location.pathname;const {data,error}=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo,skipBrowserRedirect:inAndroid}});if(error)throw error;if(inAndroid){if(!data?.url)throw new Error('無法取得 Google 登入網址。');Android.openGoogleLogin(data.url)}}catch(e){setMessage(e.message||'Google 登入目前無法使用，請先用原本 Email／密碼登入。')}}
+window.handleAndroidOAuthCallback=url=>{if(!url)return;try{const callback=new URL(url);location.replace(location.origin+location.pathname+callback.search+callback.hash)}catch(e){setMessage('Google 登入回傳資料無法讀取，請再試一次。')}};
 async function fetchCloudBundle(){
   const [{data:rows,error:rErr},{data:pays,error:pErr}]=await Promise.all([
     db.from('spend_records').select('*').is('deleted_at',null).order('created_at',{ascending:false}),
@@ -57,11 +60,11 @@ function showApp(ok){el('auth').classList.toggle('hidden',ok);el('topbar').class
 function setMode(next){mode=next;el('loginTab').classList.toggle('on',mode==='login');el('signupTab').classList.toggle('on',mode==='signup');el('nameWrap').hidden=mode!=='signup';el('submitBtn').textContent=mode==='signup'?'建立帳號':'登入';setMessage('')}
 async function submitAuth(){const email=el('email').value.trim(),password=el('password').value;if(!email||!password)return setMessage('請輸入 Email 和密碼。');el('submitBtn').disabled=true;setMessage('');try{if(mode==='signup'){const name=el('displayName').value.trim();const {data,error}=await db.auth.signUp({email,password,options:{data:{display_name:name||email.split('@')[0]}}});if(error)throw error;if(data.session){session=data.session;await initialSync()}else{setMessage('註冊完成，請先到信箱點確認連結，再回來登入。');setMode('login')}}else{const {data,error}=await db.auth.signInWithPassword({email,password});if(error)throw error;session=data.session;await initialSync()}}catch(e){setMessage(e.message||'發生錯誤，請稍後再試。')}finally{el('submitBtn').disabled=false}}
 async function resetPassword(){const email=el('email').value.trim();if(!email)return setMessage('先輸入註冊時使用的 Email。');try{const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:'https://save-radar-gold.vercel.app/reset-password'});if(error)throw error;setMessage('重設信已寄出，請到信箱查看。')}catch(e){setMessage(e.message||'無法寄出重設信。')}}
-async function logout(){await db.auth.signOut();session=null;showApp(false);setMessage('已登出。')}
+async function logout(){clearNativeSession();await db.auth.signOut();session=null;showApp(false);setMessage('已登出。')}
 async function pullIfNewer(){if(!session||dirty||document.hidden)return;try{const cloud=await fetchCloudBundle();const seen=localStorage.getItem('spend_cloud_seen_'+session.user.id)||'';if(cloud.newest&&cloud.newest>seen){saveLocal(cloud.records);localStorage.setItem('spend_cloud_seen_'+session.user.id,cloud.newest);try{el('appFrame').contentWindow.location.reload()}catch{}setSync('已更新雲端資料')}}catch(e){console.error(e)}}
 function schedulePush(){dirty=true;clearTimeout(syncTimer);syncTimer=setTimeout(async()=>{try{await syncLocalToCloud(getLocal())}catch(e){console.error(e);setSync('同步失敗')}},800)}
 window.addEventListener('storage',e=>{if(e.key===KEY&&session)schedulePush()});document.addEventListener('visibilitychange',()=>{if(!document.hidden)pullIfNewer()});window.addEventListener('focus',pullIfNewer);
 el('legacyFile').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const obj=JSON.parse(await f.text());const arr=Array.isArray(obj)?obj:Array.isArray(obj.records)?obj.records:null;if(!arr)throw new Error();const merged=mergePreferSecond(arr,getLocal());saveLocal(merged);if(session)await syncLocalToCloud(merged);setMessage(`已匯入 ${arr.length} 筆舊資料，並與現有資料合併，不會清空雲端紀錄。`);if(session){try{el('appFrame').contentWindow.location.reload()}catch{}}}catch{setMessage('這個檔案不是可用的「我的消費簿」備份。')}finally{e.target.value=''}});
-(async()=>{const {data}=await db.auth.getSession();session=data.session||null;if(session)await initialSync();else showApp(false)})();
-db.auth.onAuthStateChange(async(_event,newSession)=>{if(newSession&&!session){session=newSession;await initialSync()}else if(!newSession&&session){session=null;showApp(false)}});
+(async()=>{const {data}=await db.auth.getSession();session=data.session||null;if(!session)session=await restoreNativeSession();if(session){saveNativeSession(session);await initialSync()}else showApp(false)})();
+db.auth.onAuthStateChange(async(_event,newSession)=>{if(newSession){saveNativeSession(newSession);if(!session){session=newSession;await initialSync()}else session=newSession}else if(session){clearNativeSession();session=null;showApp(false)}});
 window.setMode=setMode;window.submitAuth=submitAuth;window.resetPassword=resetPassword;window.logout=logout;window.signInWithGoogle=signInWithGoogle;
