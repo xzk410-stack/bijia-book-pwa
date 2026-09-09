@@ -80,7 +80,7 @@ public class MainActivity extends ComponentActivity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
         settings.setTextZoom(100);
-        settings.setUserAgentString(settings.getUserAgentString() + " Spendbook/1.0.0 (Android)");
+        settings.setUserAgentString(settings.getUserAgentString() + " Spendbook/1.0.1 (Android)");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) settings.setSafeBrowsingEnabled(true);
 
         webView.setWebViewClient(new WebViewClient() {
