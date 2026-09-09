@@ -1,0 +1,67 @@
+name: Fix Spendbook original logo v1.0.1
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-spendbook-original-logo-v101.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore original 我的消費簿 logo for Android
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet cairosvg
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import cairosvg
+
+          svg=Path('spendbook/icon.svg').read_bytes()
+          sizes={
+            'mipmap-mdpi':48,
+            'mipmap-hdpi':72,
+            'mipmap-xhdpi':96,
+            'mipmap-xxhdpi':144,
+            'mipmap-xxxhdpi':192,
+          }
+          base=Path('android/spendbook/app/src/main/res')
+          for folder,size in sizes.items():
+              d=base/folder
+              d.mkdir(parents=True,exist_ok=True)
+              cairosvg.svg2png(bytestring=svg,write_to=str(d/'ic_launcher.png'),output_width=size,output_height=size)
+              cairosvg.svg2png(bytestring=svg,write_to=str(d/'ic_launcher_round.png'),output_width=size,output_height=size)
+
+          # Use the exact original icon rather than the temporary simplified adaptive icon.
+          for p in [
+            base/'mipmap-anydpi-v26/ic_launcher.xml',
+            base/'mipmap-anydpi-v26/ic_launcher_round.xml',
+            base/'drawable/ic_launcher_foreground.xml',
+          ]:
+              if p.exists(): p.unlink()
+
+          gradle=Path('android/spendbook/app/build.gradle.kts')
+          s=gradle.read_text(encoding='utf-8')
+          s=s.replace('versionCode = 1','versionCode = 2',1)
+          s=s.replace('versionName = "1.0.0"','versionName = "1.0.1"',1)
+          gradle.write_text(s,encoding='utf-8')
+
+          java=Path('android/spendbook/app/src/main/java/com/xzk410/spendbook/MainActivity.java')
+          s=java.read_text(encoding='utf-8').replace('Spendbook/1.0.0 (Android)','Spendbook/1.0.1 (Android)')
+          java.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Commit original logo Android update
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add android/spendbook
+          git diff --cached --check
+          git commit -m 'Restore 我的消費簿 original app logo v1.0.1' || exit 0
+          git push
