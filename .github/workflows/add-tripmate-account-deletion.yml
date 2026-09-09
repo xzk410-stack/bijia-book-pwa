@@ -1,0 +1,50 @@
+name: Add TripMate account deletion
+
+on:
+  push:
+    paths:
+      - '.github/workflows/add-tripmate-account-deletion.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add guarded account deletion UI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('tripmate-live/index.html')
+          s=p.read_text(encoding='utf-8')
+
+          old="async function signOut(){saveSession(null);state.trip=null;state.trips=[];clearTripData();render();toast('已登出')}"
+          new=old+"""\nasync function deleteMyAccount(){if(!state.session?.access_token)return toast('請先登入');openForm('刪除旅伴帳號',[{name:'confirm',label:'輸入「刪除帳號」確認',required:true,full:true}],{},async v=>{if(String(v.confirm||'').trim()!=='刪除帳號')return toast('確認文字不正確，沒有刪除任何資料');setBusy(true,'正在安全刪除帳號…');try{const r=await fetch(SUPABASE_URL+'/functions/v1/delete-my-account',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+state.session.access_token,'Content-Type':'application/json'},body:'{}'});const out=await r.json().catch(()=>({}));if(r.status===409&&out.error==='owns_shared_trips'){closeForm();const names=Array.isArray(out.trips)?out.trips.join('、'):'';return toast('為避免刪到同行者資料，請先處理你擁有的共享旅行'+(names?'：'+names:''))}if(!r.ok)throw new Error(out.error||'刪除失敗');closeForm();saveSession(null);state.trip=null;state.trips=[];clearTripData();render();toast('旅伴帳號與私人資料已刪除');setTimeout(()=>location.replace(location.origin+location.pathname),900)}catch(e){toast('刪除失敗：'+errText(e))}finally{setBusy(false)}})}"""
+          if old not in s: raise SystemExit('signOut marker missing')
+          s=s.replace(old,new,1)
+
+          marker="""<div class=\"callout\" style=\"margin-top:12px\">App 內品牌圖示會記住選擇；安裝到手機桌面的 PWA 圖示由 manifest 固定使用正式圖示。</div>`}"""
+          replacement="""<div class=\"callout\" style=\"margin-top:12px\">App 內品牌圖示會記住選擇；安裝到手機桌面的 PWA 圖示由 manifest 固定使用正式圖示。</div><div class=\"sectionhead\"><div><h3>帳號與資料</h3><p>旅伴帳號只影響旅伴，不會刪除收藏雷達、比價簿或我的消費簿。</p></div></div><div class=\"card\"><div class=\"meta\">刪除帳號會永久移除你的私人資料與你單獨擁有的旅行；如果你仍擁有有同行者的旅行，系統會先阻擋，避免誤刪別人的共享資料。</div><button class=\"dangerbtn wide\" data-delete-account style=\"margin-top:10px\">刪除旅伴帳號</button></div>`}"""
+          if marker not in s: raise SystemExit('settings marker missing')
+          s=s.replace(marker,replacement,1)
+
+          event_marker="if(b.dataset.theme){state.themeId=b.dataset.theme;applyTheme();render();return}if(b.matches('[data-close-modal]'))"
+          event_repl="if(b.dataset.theme){state.themeId=b.dataset.theme;applyTheme();render();return}if(b.matches('[data-delete-account]'))return deleteMyAccount();if(b.matches('[data-close-modal]'))"
+          if event_marker not in s: raise SystemExit('event marker missing')
+          s=s.replace(event_marker,event_repl,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'functions/v1/delete-my-account' tripmate-live/index.html
+          grep -q 'data-delete-account' tripmate-live/index.html
+          grep -q '有同行者的旅行，系統會先阻擋' tripmate-live/index.html
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tripmate-live/index.html
+          git commit -m 'Add safe 旅伴 account deletion' || exit 0
+          git push
