@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="theme-color" content="#f7f5ef">
 <title>比價簿</title>
 <script>
@@ -17,7 +18,7 @@
 </script>
 <style>
 *{box-sizing:border-box}html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;background:#f7f5ef;color:#193a2d}button,input{font:inherit}button{cursor:pointer}body{overflow:hidden}.shell{height:100%;display:flex;flex-direction:column}.topbar{display:none;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;background:rgba(255,255,255,.97);border-bottom:1px solid #e7e2d8}.topbar.show{display:flex}.account{min-width:0}.account b{display:block;font-size:13px}.account small{display:block;color:#7d857e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}.tools{display:flex;align-items:center;gap:6px}.tools button{border:1px solid #dde6df;background:#fff;border-radius:11px;padding:7px 9px;font-size:11px;font-weight:750;color:#52635a}.sync{color:#2f7654!important;background:#eef7f0!important;border-color:#d5e8da!important}iframe{border:0;width:100%;flex:1;background:#f8f4ec}
-.auth{position:fixed;inset:0;display:flex;justify-content:center;align-items:flex-start;padding:max(22px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom));background:linear-gradient(180deg,#fbfaf6 0%,#f2f6f1 100%);z-index:20;overflow:auto}.auth.hidden{display:none}.card{width:min(420px,100%);margin:auto 0;background:rgba(255,255,255,.98);border:1px solid #e4e7e1;border-radius:26px;padding:22px;box-shadow:0 18px 52px rgba(48,78,61,.10)}
+.boot{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:linear-gradient(180deg,#fbfaf6 0%,#f2f6f1 100%);transition:opacity .12s ease}.boot[hidden]{display:none}.bootbox{display:grid;place-items:center;gap:10px;color:#69756f;font-size:12px;font-weight:700}.booticon{width:64px;height:64px;border-radius:20px;display:grid;place-items:center;background:#fff;box-shadow:0 12px 34px rgba(45,65,55,.08);overflow:hidden}.booticon img{width:48px;height:48px}.bootdots{display:flex;gap:5px}.bootdots i{width:6px;height:6px;border-radius:50%;background:#8ca299;animation:bootpulse 1s ease-in-out infinite}.bootdots i:nth-child(2){animation-delay:.15s}.bootdots i:nth-child(3){animation-delay:.3s}@keyframes bootpulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}.auth{position:fixed;inset:0;display:flex;justify-content:center;align-items:flex-start;padding:max(22px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom));background:linear-gradient(180deg,#fbfaf6 0%,#f2f6f1 100%);z-index:20;overflow:auto}.auth.hidden{display:none}.card{width:min(420px,100%);margin:auto 0;background:rgba(255,255,255,.98);border:1px solid #e4e7e1;border-radius:26px;padding:22px;box-shadow:0 18px 52px rgba(48,78,61,.10)}
 .brand{text-align:center;margin-bottom:16px}.logo{width:64px;height:64px;border-radius:20px;margin:0 auto 10px;display:grid;place-items:center;background:linear-gradient(145deg,#e7f2e9,#fff5e9);font-size:31px;box-shadow:inset 0 0 0 1px rgba(74,117,88,.04)}.brand h1{font-size:26px;line-height:1.2;margin:0 0 7px;letter-spacing:-.02em}.brand p{font-size:12.5px;color:#707b73;line-height:1.55;margin:0}.sharedBadge{display:inline-flex;align-items:center;gap:5px;margin-top:9px;padding:6px 9px;border-radius:999px;background:#f1f7f2;color:#447158;font-size:11px;font-weight:800}
 .tabs{display:grid;grid-template-columns:1fr 1fr;background:#f2f4ef;border-radius:14px;padding:4px;margin-bottom:15px}.tabs button{border:0;background:transparent;padding:9px 10px;border-radius:11px;font-weight:800;color:#778079}.tabs button.on{background:#fff;color:#397656;box-shadow:0 3px 10px rgba(60,90,70,.08)}label{display:block;font-size:12px;color:#68736b;margin:10px 0 5px;font-weight:700}input{width:100%;border:1px solid #dbe1db;border-radius:14px;padding:12px 13px;outline:none;background:#fff;color:#21352b;transition:border-color .15s,box-shadow .15s}input:focus{border-color:#86ad95;box-shadow:0 0 0 3px rgba(74,130,94,.10)}.primary{width:100%;border:0;border-radius:15px;padding:13px;background:linear-gradient(135deg,#4f8b68,#397656);color:#fff;font-weight:850;font-size:15px;margin-top:14px;box-shadow:0 8px 20px rgba(57,118,86,.18)}.primary:disabled,.google:disabled{opacity:.62;cursor:default}.link{width:100%;border:0;background:transparent;color:#397656;font-weight:750;padding:9px;margin-top:3px}.msg{font-size:12px;line-height:1.55;margin-top:10px;color:#765927;background:#fff7e5;border:1px solid #f2e2b9;padding:10px 11px;border-radius:13px}.divider{display:flex;align-items:center;gap:10px;color:#989f99;font-size:11px;margin:10px 0}.divider:before,.divider:after{content:"";height:1px;background:#eceee8;flex:1}.google{display:flex;width:100%;border:1px solid #dfe4de;background:#fff;border-radius:15px;padding:12px 13px;font-size:14px;font-weight:850;color:#34463c;align-items:center;justify-content:center;gap:10px;box-shadow:0 2px 8px rgba(53,76,61,.04)}
 .migration{margin-top:14px;border:1px solid #e7ebe6;border-radius:14px;background:#fafbf9;overflow:hidden}.migration summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;cursor:pointer;font-size:12px;font-weight:800;color:#58655d}.migration summary::-webkit-details-marker{display:none}.migration summary:after{content:"＋";font-size:17px;line-height:1;color:#819087}.migration[open] summary:after{content:"－"}.migrationBody{border-top:1px solid #edf0eb;padding:11px 12px 12px}.migrationBody p{font-size:11px;color:#7b817c;line-height:1.55;margin:0 0 9px}.minirow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.minirow button{display:flex;align-items:center;justify-content:center;border:1px solid #dfe4de;background:#fff;color:#4f5c54;border-radius:12px;padding:9px;font-size:12px;font-weight:750}.status{font-size:11px;color:#7b817c;margin-top:8px;text-align:center}.legal{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:13px;font-size:11px}.legal a{color:#6b756e;text-decoration:none;font-weight:700}
@@ -25,6 +26,7 @@
 </style>
 </head>
 <body>
+<div id="boot" class="boot" aria-label="比價簿載入中"><div class="bootbox"><div class="booticon">🔎</div><div class="bootdots"><i></i><i></i><i></i></div></div></div>
 <div class="shell">
   <div id="topbar" class="topbar">
     <div class="account"><b>比價簿 · 雲端版</b><small id="accountEmail"></small></div>
@@ -32,7 +34,7 @@
   </div>
   <iframe id="appFrame" src="./app.html" hidden title="比價簿"></iframe>
 </div>
-<section id="auth" class="auth">
+<section id="auth" class="auth hidden">
   <div class="card">
     <div class="brand">
       <div class="logo">🔎</div>
@@ -70,6 +72,6 @@
 </section>
 <input id="backupFile" type="file" accept="application/json,.json" hidden>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./cloud.js"></script>
+<script src="./cloud.js?v=auth-boot-20260909"></script>
 </body>
 </html>

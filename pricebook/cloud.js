@@ -86,7 +86,7 @@ function mergeSnapshots(cloudSnap,localSnap){
 function sameSnapshot(a,b){try{return JSON.stringify(normalizeSnapshot(a))===JSON.stringify(normalizeSnapshot(b))}catch{return false}}
 function setMessage(text=''){const m=$('message');m.textContent=text;m.hidden=!text}
 function setStatus(text='雲端同步',warn=false){const s=$('syncStatus');if(s)s.textContent=text;const b=$('cloudState');if(b){b.textContent=text;b.classList.toggle('warn',warn)}}
-function showApp(ok){$('auth').classList.toggle('hidden',ok);$('topbar').classList.toggle('show',ok);$('appFrame').hidden=!ok;if(ok){$('accountEmail').textContent=session?.user?.email||'';try{$('appFrame').contentWindow.location.reload()}catch{}}}
+function showApp(ok){const boot=$('boot');if(boot)boot.hidden=true;$('auth').classList.toggle('hidden',ok);$('topbar').classList.toggle('show',ok);$('appFrame').hidden=!ok;if(ok){$('accountEmail').textContent=session?.user?.email||'';try{$('appFrame').contentWindow.location.reload()}catch{}}}
 function setMode(next){authMode=next;$('loginTab').classList.toggle('on',next==='login');$('signupTab').classList.toggle('on',next==='signup');$('nameWrap').hidden=next!=='signup';$('submitBtn').textContent=next==='signup'?'建立帳號':'登入';setMessage('')}
 
 async function signInWithGoogle(){
