@@ -1,0 +1,39 @@
+name: Harden TripMate sharing permissions
+
+on:
+  push:
+    paths:
+      - '.github/workflows/harden-tripmate-sharing.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restrict invite UI to trip owner
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('tripmate-live/index.html')
+          s=p.read_text(encoding='utf-8')
+          old='''<div class="meta">目前權限：${roleLabel(state.roles[state.trip.id])}</div>${canEdit()?`<div class="chips"'''
+          new='''<div class="meta">目前權限：${roleLabel(state.roles[state.trip.id])}</div>${state.roles[state.trip.id]==='owner'?`<div class="chips"'''
+          if old not in s: raise SystemExit('owner invite marker not found')
+          s=s.replace(old,new,1)
+          s=s.replace("你目前是僅查看成員，不能建立邀請。","只有旅程擁有者可以建立邀請碼。",1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q "state.roles\[state.trip.id\]==='owner'?" tripmate-live/index.html
+          grep -q '只有旅程擁有者可以建立邀請碼' tripmate-live/index.html
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tripmate-live/index.html
+          git commit -m 'Restrict 旅伴 invites to trip owner' || exit 0
+          git push
