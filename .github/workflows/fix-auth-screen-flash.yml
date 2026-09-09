@@ -1,0 +1,109 @@
+name: Fix auth screen flash
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-auth-screen-flash.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Hide login until auth state is resolved
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def patch_index(path, app_name, icon_html, bg, cloud_old, cloud_new):
+              p=Path(path)
+              s=p.read_text(encoding='utf-8')
+
+              if '<meta http-equiv="Cache-Control"' not in s:
+                  s=s.replace('<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
+                              '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">',1)
+
+              style_anchor='.auth{position:fixed;'
+              boot_css=f'.boot{{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:{bg};transition:opacity .12s ease}}.boot[hidden]{{display:none}}.bootbox{{display:grid;place-items:center;gap:10px;color:#69756f;font-size:12px;font-weight:700}}.booticon{{width:64px;height:64px;border-radius:20px;display:grid;place-items:center;background:#fff;box-shadow:0 12px 34px rgba(45,65,55,.08);overflow:hidden}}.booticon img{{width:48px;height:48px}}.bootdots{{display:flex;gap:5px}}.bootdots i{{width:6px;height:6px;border-radius:50%;background:#8ca299;animation:bootpulse 1s ease-in-out infinite}}.bootdots i:nth-child(2){{animation-delay:.15s}}.bootdots i:nth-child(3){{animation-delay:.3s}}@keyframes bootpulse{{0%,100%{{opacity:.3;transform:scale(.8)}}50%{{opacity:1;transform:scale(1)}}}}'
+              if '.boot{position:fixed;' not in s:
+                  if style_anchor not in s: raise SystemExit(f'{path}: style anchor missing')
+                  s=s.replace(style_anchor,boot_css+style_anchor,1)
+
+              auth='<section id="auth" class="auth">'
+              if auth in s:
+                  s=s.replace(auth,'<section id="auth" class="auth hidden">',1)
+
+              body_anchor='<div class="shell">'
+              boot=f'<div id="boot" class="boot" aria-label="{app_name}載入中"><div class="bootbox"><div class="booticon">{icon_html}</div><div class="bootdots"><i></i><i></i><i></i></div></div></div>\n<div class="shell">'
+              if 'id="boot" class="boot"' not in s:
+                  if body_anchor not in s: raise SystemExit(f'{path}: body anchor missing')
+                  s=s.replace(body_anchor,boot,1)
+
+              if cloud_old in s:
+                  s=s.replace(cloud_old,cloud_new,1)
+              p.write_text(s,encoding='utf-8')
+
+          patch_index(
+              'pricebook/index.html','比價簿','🔎',
+              'linear-gradient(180deg,#fbfaf6 0%,#f2f6f1 100%)',
+              '<script src="./cloud.js"></script>',
+              '<script src="./cloud.js?v=auth-boot-20260909"></script>'
+          )
+          patch_index(
+              'spendbook/index.html','我的消費簿','<img src="./icon.svg" alt="">',
+              'linear-gradient(180deg,#fafbf8 0%,#f1f5f2 100%)',
+              '<script src="./cloud.js?v=google-login-20260909"></script>',
+              '<script src="./cloud.js?v=auth-boot-20260909"></script>'
+          )
+
+          # Hide the boot screen only after we know whether to show the app or login.
+          p=Path('pricebook/cloud.js')
+          s=p.read_text(encoding='utf-8')
+          old="function showApp(ok){$('auth').classList.toggle('hidden',ok);$('topbar').classList.toggle('show',ok);$('appFrame').hidden=!ok;if(ok){$('accountEmail').textContent=session?.user?.email||'';try{$('appFrame').contentWindow.location.reload()}catch{}}}"
+          new="function showApp(ok){const boot=$('boot');if(boot)boot.hidden=true;$('auth').classList.toggle('hidden',ok);$('topbar').classList.toggle('show',ok);$('appFrame').hidden=!ok;if(ok){$('accountEmail').textContent=session?.user?.email||'';try{$('appFrame').contentWindow.location.reload()}catch{}}}"
+          if old not in s: raise SystemExit('pricebook showApp marker missing')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('spendbook/cloud.js')
+          s=p.read_text(encoding='utf-8')
+          old="function showApp(ok){el('auth').classList.toggle('hidden',ok);el('topbar').classList.toggle('show',ok);el('appFrame').hidden=!ok;if(ok){el('accountEmail').textContent=session?.user?.email||'';try{el('appFrame').contentWindow.location.reload()}catch{}}}"
+          new="function showApp(ok){const boot=el('boot');if(boot)boot.hidden=true;el('auth').classList.toggle('hidden',ok);el('topbar').classList.toggle('show',ok);el('appFrame').hidden=!ok;if(ok){el('accountEmail').textContent=session?.user?.email||'';try{el('appFrame').contentWindow.location.reload()}catch{}}}"
+          if old not in s: raise SystemExit('spendbook showApp marker missing')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+
+          # Refresh the Spendbook service worker namespace as well.
+          p=Path('spendbook/sw.js')
+          s=p.read_text(encoding='utf-8').replace("const CACHE='spendbook-v4';","const CACHE='spendbook-v5';",1)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('spendbook/index.html')
+          s=p.read_text(encoding='utf-8').replace('navigator.serviceWorker.register("./sw.js?v=4")','navigator.serviceWorker.register("./sw.js?v=5")',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Verify patch
+        run: |
+          grep -q 'id="auth" class="auth hidden"' pricebook/index.html
+          grep -q 'id="boot" class="boot"' pricebook/index.html
+          grep -q 'auth-boot-20260909' pricebook/index.html
+          grep -q "if(boot)boot.hidden=true" pricebook/cloud.js
+          grep -q 'id="auth" class="auth hidden"' spendbook/index.html
+          grep -q 'id="boot" class="boot"' spendbook/index.html
+          grep -q 'auth-boot-20260909' spendbook/index.html
+          grep -q "if(boot)boot.hidden=true" spendbook/cloud.js
+          grep -q "spendbook-v5" spendbook/sw.js
+
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pricebook/index.html pricebook/cloud.js spendbook/index.html spendbook/cloud.js spendbook/sw.js
+          git diff --cached --check
+          git commit -m 'Prevent login screen flash on app launch'
+          git push
