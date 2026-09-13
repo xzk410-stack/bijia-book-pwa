@@ -107,7 +107,7 @@ public class MainActivity extends ComponentActivity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
         settings.setTextZoom(100);
-        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.7 (Android)");
+        settings.setUserAgentString(settings.getUserAgentString() + " BijiaBook/1.6.8 (Android)");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             settings.setSafeBrowsingEnabled(true);
         }
@@ -136,6 +136,7 @@ public class MainActivity extends ComponentActivity {
             }
         });
         webView.addJavascriptInterface(new AndroidBridge(), "Android");
+        webView.addJavascriptInterface(new OrderOcrBridge(webView), "OrderOCR");
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onShowFileChooser(WebView webView,
