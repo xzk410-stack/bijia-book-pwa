@@ -8,7 +8,10 @@
   const STORES=['蝦皮','momo','PChome','全聯','家樂福','寶雅','屈臣氏','康是美','Costco','好市多'];
   const style=document.createElement('style');
   style.textContent=`
+    .price-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.08fr)}.price-box{min-width:0;padding:10px 9px}.price-box b{display:block;white-space:nowrap;font-size:13px;letter-spacing:-.015em;overflow:hidden;text-overflow:ellipsis}
     #compareView .compare-core,#compareView .compare-spec-grid{grid-template-columns:1fr!important}
+    #compareView .compare-specs{margin-top:12px;border:1px solid var(--line);border-radius:16px;background:#f8faf6;overflow:hidden}#compareView .compare-specs summary{list-style:none;display:flex;align-items:center;justify-content:space-between;padding:13px 14px;font-weight:800;color:#4f6258}#compareView .compare-specs summary::-webkit-details-marker{display:none}#compareView .compare-specs summary:after{content:'＋';font-size:18px}#compareView .compare-specs[open] summary:after{content:'－'}#compareView .compare-spec-grid{padding:0 12px 12px}
+    #compareView .compare-help{padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}#compareView .compare-help details{border:1px solid var(--line);border-radius:15px;background:#fff;overflow:hidden}#compareView .compare-help summary{list-style:none;padding:12px 14px;font-weight:800}#compareView .compare-help .smallnote{padding:0 14px 13px}
     #compareView .compare-core .field,#compareView .compare-spec-grid .field{grid-column:auto!important;min-width:0}
     #compareView .compare-core input,#compareView .compare-core select,#compareView .compare-spec-grid input,#compareView .compare-spec-grid select{min-height:50px}
     .pb-suggest-panel{display:none;border:1px solid var(--line);border-radius:13px;background:#fff;box-shadow:0 8px 24px rgba(45,76,59,.10);overflow:hidden;margin-top:5px;max-height:190px;overflow-y:auto}
@@ -20,6 +23,14 @@
   const cats=()=>[...new Set([...products().map(p=>clean(p.category)).filter(Boolean),...CATS])];
   const stores=()=>{const a=[];products().forEach(p=>(p.records||[]).forEach(r=>{const s=clean(r.store);if(s)a.push(s)}));return [...new Set([...a,...STORES])];};
   const productNames=()=>products().map(p=>clean(p.name)).filter(Boolean);
+  if(typeof window.displayUnitPrice==='function'&&!window.__compactUnitPriceFinal){window.__compactUnitPriceFinal=true;window.displayUnitPrice=(p,val)=>val==null?'—':preciseMoney(val)+'/'+esc(p.unit||'件');try{renderHome()}catch{}}
+  function fieldOf(id){const el=$(id);return el?el.closest('.field'):null}
+  function layoutCompare(){
+    const view=$('compareView');if(!view)return;const panel=view.querySelector(':scope > .panel:first-child');if(!panel)return;
+    if(view.dataset.finalLayout!=='1'){const grid=panel.querySelector('.form-grid');if(grid){const core=document.createElement('div');core.className='compare-core';[fieldOf('cmpProduct'),fieldOf('cmpPrice'),fieldOf('cmpStore')].filter(Boolean).forEach(x=>core.appendChild(x));const note=document.createElement('div');note.id='compareUnitNote';note.className='compare-unit-note';core.appendChild(note);grid.replaceWith(core);const details=document.createElement('details');details.className='compare-specs';details.innerHTML='<summary>包裝規格與數量（選填）</summary><div class="compare-spec-grid"></div>';const sg=details.querySelector('.compare-spec-grid');[fieldOf('cmpUnitSize'),fieldOf('cmpPackCount'),fieldOf('cmpPackUnit'),fieldOf('cmpQty'),fieldOf('cmpSpec'),$('cmpCalcPreview')].filter(Boolean).forEach(x=>sg.appendChild(x));core.insertAdjacentElement('afterend',details);view.dataset.finalLayout='1'}}
+    const help=view.querySelectorAll(':scope > .panel')[1];if(help&&!help.classList.contains('compare-help')){help.classList.add('compare-help');const txt=help.querySelector('.smallnote')?.innerHTML||'';help.innerHTML=`<details><summary>怎麼看比價結果？</summary><div class="smallnote">${txt}</div></details>`}
+  }
+  function syncFab(){const fab=$('addBtn'),home=$('homeView');if(fab&&home)fab.style.display=home.classList.contains('active')?'':'none'}
   function attach(input,valuesFn){
     if(!input||input.dataset.pbSuggest==='1')return;
     input.dataset.pbSuggest='1';input.removeAttribute('list');input.setAttribute('autocomplete','off');
@@ -39,6 +50,6 @@
   function cleanHistory(){document.querySelectorAll('.history .hrow').forEach(row=>[...row.querySelectorAll('button')].forEach(b=>{const t=clean(b.textContent);if(t==='更換'||t==='更換截圖')b.remove();else if(t==='移除')b.textContent='移除截圖';else if(t==='刪除')b.textContent='刪除價格';else if(t==='編輯')b.textContent='編輯價格'}));}
   function version(){document.querySelectorAll('.version-note').forEach(el=>{if(/比價簿\s*v/i.test(el.textContent||''))el.textContent='比價簿 v1.6.8'})}
   function note(){try{const n=$('compareUnitNote'),p=getProduct($('cmpProduct').value);if(n)n.textContent=p?`目前以「${p.unit||'件'}」為比較單位；同商品不同包裝時，再展開下面規格。`:''}catch{}}
-  function run(){installSuggestions();ensurePicker();cleanHistory();version();note()}
+  function run(){layoutCompare();installSuggestions();ensurePicker();cleanHistory();version();note();syncFab()}
   run();const mo=new MutationObserver(()=>setTimeout(run,0));mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});setInterval(run,1800);
 })();
