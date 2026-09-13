@@ -35,8 +35,6 @@
         if(d&&!found.includes(d))found.push(d);
       }
       if(!found.length)return {date:'',dateKind:''};
-      // 若截圖只有物流／完成時間，仍先帶入可辨識日期讓使用者確認。
-      // 有多個日期時取最早的一個，通常會比取件／完成日更接近實際購買日。
       found.sort();
       return {date:found[0],dateKind:'visible'};
     };
@@ -89,7 +87,151 @@
       }catch{}
     });
 
-    // 條碼查不到商品時仍直接進「完整新增」，不要被快速新增選單攔住。
+    const media=()=>{try{return parent&&parent.pricebookMedia?parent.pricebookMedia:null}catch{return null}};
+    const nativeOcr=()=>{try{return parent&&parent.OrderOCR?parent.OrderOCR:(window.OrderOCR||null)}catch{return window.OrderOCR||null}};
+    const fileToImage=file=>new Promise((resolve,reject)=>{
+      const url=URL.createObjectURL(file),img=new Image();
+      img.onload=()=>{URL.revokeObjectURL(url);resolve(img)};
+      img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('無法讀取照片'))};
+      img.src=url;
+    });
+    const canvasToBlob=(canvas,q)=>new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',q));
+    const compressJpeg=async(file,maxDim=1600,maxBytes=500*1024)=>{
+      const img=await fileToImage(file);
+      let scale=Math.min(1,maxDim/Math.max(img.naturalWidth||img.width,img.naturalHeight||img.height));
+      for(let round=0;round<4;round++){
+        const c=document.createElement('canvas');
+        c.width=Math.max(1,Math.round((img.naturalWidth||img.width)*scale));
+        c.height=Math.max(1,Math.round((img.naturalHeight||img.height)*scale));
+        c.getContext('2d',{alpha:false}).drawImage(img,0,0,c.width,c.height);
+        for(const q of [0.82,0.72,0.62,0.52]){
+          const blob=await canvasToBlob(c,q);
+          if(blob&&blob.size<=maxBytes)return blob;
+        }
+        scale*=0.78;
+      }
+      throw new Error('照片壓縮失敗');
+    };
+    const blobToDataUrl=blob=>new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(blob)});
+
+    let ocrMode=false;
+    let preparedPath='';
+    let preparePromise=null;
+    let prepareGeneration=0;
+    let committed=false;
+    let modalWasOpen=false;
+
+    const removePrepared=async(path=preparedPath)=>{
+      if(!path)return;
+      try{await media()?.remove(path)}catch{}
+      if(preparedPath===path)preparedPath='';
+    };
+
+    $('openQuickOcr')?.addEventListener('click',()=>{ocrMode=true;});
+    $('openQuickManual')?.addEventListener('click',()=>{ocrMode=false;});
+
+    const originalReceipt=$('quickReceipt');
+    if(originalReceipt){
+      const receipt=originalReceipt.cloneNode(true);
+      originalReceipt.replaceWith(receipt);
+      receipt.addEventListener('change',async e=>{
+        const file=e.target.files?.[0];
+        if(!file)return;
+        const gen=++prepareGeneration;
+        const old=preparedPath;preparedPath='';if(old)removePrepared(old);
+        const preview=$('quickPreview'),previewImg=preview?.querySelector('img');
+        if(preview&&previewImg){const url=URL.createObjectURL(file);previewImg.src=url;preview.classList.add('show');previewImg.onload=()=>URL.revokeObjectURL(url);}
+        if(ocrMode)setStatus('正在辨識並準備照片…','working');
+        preparePromise=(async()=>{
+          const blob=await compressJpeg(file,1600,500*1024);
+          if(gen!==prepareGeneration)throw new Error('照片已更換');
+          const api=media();if(!api)throw new Error('照片雲端尚未就緒，請稍後再試');
+          const draftId='draft-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
+          const uploadPromise=api.upload(blob,'receipts',draftId);
+          if(ocrMode){
+            try{
+              const ocr=nativeOcr();
+              if(ocr&&typeof ocr.recognizeOrderImage==='function'){
+                const dataUrl=await blobToDataUrl(blob);
+                ocr.recognizeOrderImage(String(dataUrl));
+              }else setStatus('目前這個 App 版本沒有訂單文字辨識功能；可以手動填寫並保存截圖。','warn');
+            }catch{setStatus('文字辨識失敗，可手動確認欄位；截圖仍會保存。','warn');}
+          }
+          const path=await uploadPromise;
+          if(gen!==prepareGeneration){try{await api.remove(path)}catch{};throw new Error('照片已更換');}
+          preparedPath=path;
+          return path;
+        })();
+        preparePromise.catch(e=>{
+          if(gen===prepareGeneration&&!/照片已更換/.test(String(e?.message||'')))setStatus('照片準備失敗：'+(e?.message||'請再選一次'),'warn');
+        });
+      });
+    }
+
+    const findProductByName=name=>{
+      const needle=String(name||'').trim().toLowerCase();
+      return (db.products||[]).find(p=>String(p.name||'').trim().toLowerCase()===needle)||null;
+    };
+    const fastSave=async()=>{
+      const name=$('quickProduct')?.value.trim()||'';
+      const qty=Number($('quickQty')?.value),total=Number($('quickTotal')?.value);
+      const store=$('quickStore')?.value.trim()||'',unit=$('quickUnit')?.value||'個';
+      if(!name)return toast('商品名稱要填喔');
+      if(!(qty>0))return toast('數量要大於 0');
+      if(!(total>=0))return toast('商品總額要填喔');
+      const btn=$('quickSave');if(!btn)return;
+      btn.disabled=true;btn.textContent=preparePromise?'完成照片中…':'儲存中…';
+      try{
+        const file=$('quickReceipt')?.files?.[0];
+        let receiptPath='';
+        if(file){
+          if(preparePromise)receiptPath=await preparePromise;
+          else receiptPath=preparedPath;
+          if(!receiptPath)throw new Error('照片尚未準備完成，請稍後再試');
+        }
+        let p=findProductByName(name);
+        if(!p){p={id:id(),name,brand:'',category:'未分類',unit,barcode:'',barcodes:[],targetPrice:0,targetQty:0,note:'',favorite:false,image:'',imagePath:'',records:[]};db.products.push(p)}
+        const rid=id();
+        const r={id:rid,type:'bought',date:$('quickDate')?.value||new Date().toISOString().slice(0,10),store,price:total,currency:'TWD',exchange:1,twdPrice:total,unitSize:0,packCount:0,packUnit:unit,qty,spec:`${qty} ${p.unit||unit}`,promo:false,special:false,note:$('quickNote')?.value.trim()||'',receiptPath,createdAt:Date.now()};
+        p.records=p.records||[];p.records.push(r);
+        committed=true;preparedPath='';preparePromise=null;
+        $('quickRecordModal')?.classList.remove('show');
+        saveDB('快速新增價格紀錄');
+        openDetail(p.id);
+        toast('已快速記下這筆價格 ✓');
+      }catch(e){toast('儲存失敗：'+(e?.message||'請再試一次'))}
+      finally{btn.disabled=false;btn.textContent='儲存';}
+    };
+    if($('quickSave'))$('quickSave').onclick=fastSave;
+
+    const style=document.createElement('style');
+    style.id='pricebook-modal-scroll-lock-style';
+    style.textContent=`
+      html.pb-modal-open,body.pb-modal-open{overflow:hidden!important;overscroll-behavior:none!important;touch-action:none}
+      .modal.show{overscroll-behavior:contain!important}
+      .modal.show .sheet{overscroll-behavior-y:contain!important;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+    `;
+    document.head.appendChild(style);
+    const syncModalLock=()=>{
+      const any=!!document.querySelector('.modal.show');
+      document.documentElement.classList.toggle('pb-modal-open',any);
+      document.body.classList.toggle('pb-modal-open',any);
+      const q=$('quickRecordModal');
+      const now=!!q?.classList.contains('show');
+      if(now&&!modalWasOpen){committed=false;modalWasOpen=true;}
+      if(!now&&modalWasOpen){
+        modalWasOpen=false;
+        if(!committed){
+          const p=preparePromise;prepareGeneration++;preparePromise=null;
+          p?.then(path=>removePrepared(path)).catch(()=>{});
+          if(preparedPath)removePrepared(preparedPath);
+        }else committed=false;
+      }
+    };
+    const mo=new MutationObserver(syncModalLock);
+    mo.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+    syncModalLock();
+
     if(typeof window.openNewProductForBarcode==='function'){
       window.openNewProductForBarcode=function(code,data=null){
         closeModal('barcodeModal');
