@@ -73,6 +73,7 @@
 <input id="backupFile" type="file" accept="application/json,.json" hidden>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./cloud.js?v=auth-boot-20260909"></script>
+<script src="./media.js?v=20260914-media1"></script>
 <script>
 // Android 原生返回鍵是在外層 index.html 收到；實際畫面在同網域 iframe 裡。
 // 轉送給 app.html 的返回處理，避免按返回鍵時 Activity 直接結束、跳回手機主畫面。
@@ -84,6 +85,15 @@ window.handleAndroidBack = function(){
   }catch(e){
     return false;
   }
+};
+
+// Android ML Kit OCR 的結果在頂層 WebView 回來，再安全轉交給同網域的 app iframe。
+window.onOrderOcrNativeResult = function(payload){
+  try{
+    const frame=document.getElementById('appFrame');
+    const handler=frame&&frame.contentWindow&&frame.contentWindow.onOrderOcrResult;
+    if(typeof handler==='function') handler.call(frame.contentWindow,payload);
+  }catch(e){}
 };
 
 // 手機版「新增價格紀錄」曾因 grid 的最小內容寬度把欄位撐出畫面。
@@ -113,10 +123,23 @@ function installPricebookMobileLayoutFix(){
     doc.head.appendChild(style);
   }catch(e){}
 }
+
+function installPricebookEnhancements(){
+  installPricebookMobileLayoutFix();
+  try{
+    const frame=document.getElementById('appFrame');
+    const doc=frame&&frame.contentDocument;
+    if(!doc||!doc.body||doc.getElementById('pricebook-enhancements-script'))return;
+    const script=doc.createElement('script');
+    script.id='pricebook-enhancements-script';
+    script.src='./enhancements.js?v=20260914-quick1';
+    doc.body.appendChild(script);
+  }catch(e){}
+}
 const pricebookFrame=document.getElementById('appFrame');
 if(pricebookFrame){
-  pricebookFrame.addEventListener('load',installPricebookMobileLayoutFix);
-  installPricebookMobileLayoutFix();
+  pricebookFrame.addEventListener('load',installPricebookEnhancements);
+  installPricebookEnhancements();
 }
 </script>
 </body>
