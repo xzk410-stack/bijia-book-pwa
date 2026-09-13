@@ -82,7 +82,7 @@
       if(!doc||!doc.body||doc.getElementById('pricebook-enhancements-patch'))return;
       const script=doc.createElement('script');
       script.id='pricebook-enhancements-patch';
-      script.src='./enhancements-patch.js?v=20260914-ocr3';
+      script.src='./enhancements-patch.js?v=20260914-speed1';
       doc.body.appendChild(script);
     }catch(e){}
   }
