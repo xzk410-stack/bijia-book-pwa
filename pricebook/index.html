@@ -73,5 +73,18 @@
 <input id="backupFile" type="file" accept="application/json,.json" hidden>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./cloud.js?v=auth-boot-20260909"></script>
+<script>
+// Android 原生返回鍵是在外層 index.html 收到；實際畫面在同網域 iframe 裡。
+// 轉送給 app.html 的返回處理，避免按返回鍵時 Activity 直接結束、跳回手機主畫面。
+window.handleAndroidBack = function(){
+  try{
+    const frame = document.getElementById('appFrame');
+    const handler = frame && frame.contentWindow && frame.contentWindow.handleAndroidBack;
+    return typeof handler === 'function' ? !!handler.call(frame.contentWindow) : false;
+  }catch(e){
+    return false;
+  }
+};
+</script>
 </body>
 </html>
