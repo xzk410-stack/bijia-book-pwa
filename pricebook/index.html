@@ -85,6 +85,39 @@ window.handleAndroidBack = function(){
     return false;
   }
 };
+
+// 手機版「新增價格紀錄」曾因 grid 的最小內容寬度把欄位撐出畫面。
+// 由外層同網域頁面補上一層安全 CSS；每次 iframe 重新載入都會重新套用。
+function installPricebookMobileLayoutFix(){
+  try{
+    const frame=document.getElementById('appFrame');
+    const doc=frame&&frame.contentDocument;
+    if(!doc||!doc.head||doc.getElementById('mobile-record-layout-fix'))return;
+    const style=doc.createElement('style');
+    style.id='mobile-record-layout-fix';
+    style.textContent=`
+      #recordModal .form-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+      #recordModal .field,#recordModal .field.full{min-width:0!important;max-width:100%!important}
+      #recordModal input,#recordModal select,#recordModal textarea{min-width:0!important;max-width:100%!important}
+      #recordModal .input-action{min-width:0!important;max-width:100%!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;align-items:center!important}
+      #recordModal .input-action input{min-width:0!important;width:100%!important}
+      @media(max-width:520px){
+        #recordModal .sheet{width:100%!important;padding-left:16px!important;padding-right:16px!important}
+        #recordModal .form-grid{grid-template-columns:minmax(0,1fr)!important}
+        #recordModal .field.full{grid-column:1!important}
+        #recordModal .input-action{grid-template-columns:minmax(0,1fr)!important}
+        #recordModal .input-action .btn{width:100%!important}
+        #recordModal input[type=file]{width:100%!important;max-width:100%!important}
+      }
+    `;
+    doc.head.appendChild(style);
+  }catch(e){}
+}
+const pricebookFrame=document.getElementById('appFrame');
+if(pricebookFrame){
+  pricebookFrame.addEventListener('load',installPricebookMobileLayoutFix);
+  installPricebookMobileLayoutFix();
+}
 </script>
 </body>
 </html>
