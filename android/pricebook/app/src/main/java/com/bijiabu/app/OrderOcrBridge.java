@@ -6,6 +6,10 @@ import android.util.Base64;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 
+import com.google.android.gms.common.moduleinstall.ModuleInstall;
+import com.google.android.gms.common.moduleinstall.ModuleInstallClient;
+import com.google.android.gms.common.moduleinstall.ModuleInstallRequest;
+import com.google.mlkit.common.MlKitException;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
@@ -22,6 +26,16 @@ public class OrderOcrBridge {
         this.recognizer = TextRecognition.getClient(
                 new ChineseTextRecognizerOptions.Builder().build()
         );
+
+        // 使用 Google Play services 的可下載 OCR 模組，避免把大型辨識模型包進 APK。
+        // App 啟動後先在背景準備模型；若第一次還沒下載完，前端會提示稍後再試。
+        try {
+            ModuleInstallClient moduleInstallClient = ModuleInstall.getClient(webView.getContext());
+            ModuleInstallRequest request = ModuleInstallRequest.newBuilder()
+                    .addApi(recognizer)
+                    .build();
+            moduleInstallClient.installModules(request);
+        } catch (Exception ignored) { }
     }
 
     @JavascriptInterface
@@ -61,7 +75,12 @@ public class OrderOcrBridge {
                     })
                     .addOnFailureListener(e -> {
                         bitmap.recycle();
-                        sendError("訂單文字辨識失敗");
+                        if (e instanceof MlKitException
+                                && ((MlKitException) e).getErrorCode() == MlKitException.UNAVAILABLE) {
+                            sendError("辨識模組正在準備，請保持網路連線，幾秒後再試一次");
+                        } else {
+                            sendError("訂單文字辨識失敗");
+                        }
                     });
         } catch (Exception e) {
             sendError("截圖處理失敗");
