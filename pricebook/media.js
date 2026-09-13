@@ -94,6 +94,13 @@
         script.src='./product-edit-patch.js?v=20260914-edit1';
         doc.body.appendChild(script);
       }
+
+      if(!doc.getElementById('pricebook-chart-readability-patch')){
+        const script=doc.createElement('script');
+        script.id='pricebook-chart-readability-patch';
+        script.src='./chart-readability-patch.js?v=20260914-chart1';
+        doc.body.appendChild(script);
+      }
     }catch(e){}
   }
   const frame=document.getElementById('appFrame');
