@@ -13,4 +13,5 @@
   add('pricebook-final-ui-patch','./final-ui-patch.js?v=20260914-final4');
   add('pricebook-final-quick-patch','./final-quick-patch.js?v=20260914-final3');
   add('pricebook-final-cleanup-patch','./final-cleanup-patch.js?v=20260914-final3');
+  add('pricebook-quick-modal-hotfix','./quick-modal-hotfix.js?v=20260914-hotfix1');
 })();
