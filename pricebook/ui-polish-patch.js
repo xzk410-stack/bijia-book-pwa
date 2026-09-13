@@ -10,4 +10,5 @@
   };
   add('pricebook-final-ui-patch','./final-ui-patch.js?v=20260914-final2');
   add('pricebook-final-quick-patch','./final-quick-patch.js?v=20260914-final1');
+  add('pricebook-final-cleanup-patch','./final-cleanup-patch.js?v=20260914-final1');
 })();
