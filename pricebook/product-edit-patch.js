@@ -3,7 +3,6 @@
   window.__pricebookProductEditPatchLoaded = true;
 
   const $ = id => document.getElementById(id);
-  const esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
 
   const style = document.createElement('style');
   style.id = 'pricebook-product-edit-style';
@@ -26,12 +25,12 @@
   modal.id = 'productEditModal';
   modal.innerHTML = `
     <div class="sheet">
-      <div class="sheet-head"><h2>編輯商品</h2><button class="close" type="button" aria-label="關閉">×</button></div>
+      <div class="sheet-head"><h2>編輯商品資料</h2><button class="close" type="button" aria-label="關閉">×</button></div>
       <div class="edit-product-form">
         <div class="edit-field full"><label>商品名稱 *</label><input id="editProductName"></div>
         <div class="edit-grid">
           <div class="edit-field"><label>品牌</label><input id="editProductBrand"></div>
-          <div class="edit-field"><label>分類</label><select id="editProductCategory"></select></div>
+          <div class="edit-field"><label>分類</label><input id="editProductCategory" list="editProductCategoryList" placeholder="例如 日用品、清潔用品"><datalist id="editProductCategoryList"></datalist><div class="edit-hint">可直接輸入，也可從以前用過的分類中選擇。</div></div>
           <div class="edit-field"><label>比較單位 *</label><select id="editProductUnit"></select></div>
           <div class="edit-field"><label>理想入手價</label><input id="editProductTargetPrice" type="number" min="0" step="0.01" inputmode="decimal"></div>
           <div class="edit-field"><label>理想價對應總數量</label><input id="editProductTargetQty" type="number" min="0" step="0.01" inputmode="decimal"></div>
@@ -65,6 +64,18 @@
     });
   }
 
+  function fillCategorySuggestions(current) {
+    const list = $('editProductCategoryList');
+    const existing = (db?.products || []).map(x => String(x.category || '').trim()).filter(Boolean);
+    const all = Array.from(new Set([current, ...existing, ...defaultCategories].filter(Boolean)));
+    list.innerHTML = '';
+    all.forEach(v => {
+      const op = document.createElement('option');
+      op.value = v;
+      list.appendChild(op);
+    });
+  }
+
   function openProductEdit(pid) {
     const p = typeof getProduct === 'function' ? getProduct(pid) : null;
     if (!p) return;
@@ -73,12 +84,12 @@
 
     $('editProductName').value = p.name || '';
     $('editProductBrand').value = p.brand || '';
+    $('editProductCategory').value = p.category || '未分類';
     $('editProductTargetPrice').value = p.targetPrice || '';
     $('editProductTargetQty').value = p.targetQty || '';
     $('editProductNote').value = p.note || '';
 
-    const existingCategories = (db?.products || []).map(x => x.category).filter(Boolean);
-    fillSelect($('editProductCategory'), [...defaultCategories, ...existingCategories], p.category || '未分類');
+    fillCategorySuggestions(p.category || '未分類');
     fillSelect($('editProductUnit'), defaultUnits, p.unit || '個');
     modal.classList.add('show');
   }
@@ -91,7 +102,7 @@
 
     p.name = name;
     p.brand = $('editProductBrand').value.trim();
-    p.category = $('editProductCategory').value || '未分類';
+    p.category = $('editProductCategory').value.trim() || '未分類';
     p.unit = $('editProductUnit').value || '個';
     p.targetPrice = Number($('editProductTargetPrice').value) || 0;
     p.targetQty = Number($('editProductTargetQty').value) || 0;
