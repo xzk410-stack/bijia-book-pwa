@@ -73,8 +73,7 @@
         style.id = 'spendbook-parent-header-style';
         style.textContent = `
           .topbar.spendbook-scroll-header{
-            padding:14px 12px 10px!important;
-            max-height:110px;
+            max-height:82px;
             overflow:hidden;
             opacity:1;
             transition:max-height .16s ease,padding .16s ease,opacity .12s ease,border-color .12s ease;
@@ -86,14 +85,6 @@
             opacity:0;
             border-bottom-color:transparent!important;
             pointer-events:none;
-          }
-          @supports (padding: max(0px)){
-            .topbar.spendbook-scroll-header{
-              padding-top:max(14px, calc(env(safe-area-inset-top) + 8px))!important;
-            }
-            .topbar.spendbook-scroll-header.spendbook-scrolled-away{
-              padding-top:0!important;
-            }
           }
         `;
         pdoc.head.appendChild(style);
