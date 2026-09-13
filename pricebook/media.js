@@ -12,16 +12,28 @@
   function isOwnPath(path, uid){
     return typeof path === 'string' && path.startsWith(uid + '/');
   }
+  async function normalizeBlob(blob){
+    if(blob instanceof Blob) return blob;
+    // app.html lives in a same-origin iframe. A Blob created in that frame is
+    // valid binary data, but `instanceof Blob` in the parent window can be
+    // false because each frame has its own global constructor. Re-wrap it in
+    // the parent realm so Supabase Storage receives a normal Blob.
+    if(blob && typeof blob.arrayBuffer === 'function' && typeof blob.size === 'number'){
+      const bytes = await blob.arrayBuffer();
+      return new Blob([bytes], {type: blob.type || 'image/jpeg'});
+    }
+    throw new Error('沒有可上傳的照片');
+  }
 
   async function upload(blob, kind, objectId, oldPath=''){
     const uid = requireSession();
-    if(!(blob instanceof Blob)) throw new Error('沒有可上傳的照片');
-    if(blob.size > 1048576) throw new Error('照片壓縮後仍超過 1 MB，請換一張或重新選擇');
+    const uploadBlob = await normalizeBlob(blob);
+    if(uploadBlob.size > 1048576) throw new Error('照片壓縮後仍超過 1 MB，請換一張或重新選擇');
     const folder = safePart(kind);
     const item = safePart(objectId);
     const name = `${uid}/${folder}/${item}/${Date.now()}-${Math.random().toString(36).slice(2,10)}.jpg`;
-    const {error} = await dbClient.storage.from(BUCKET).upload(name, blob, {
-      contentType: 'image/jpeg',
+    const {error} = await dbClient.storage.from(BUCKET).upload(name, uploadBlob, {
+      contentType: uploadBlob.type || 'image/jpeg',
       cacheControl: '3600',
       upsert: false
     });
