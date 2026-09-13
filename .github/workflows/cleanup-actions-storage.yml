@@ -1,0 +1,51 @@
+name: Cleanup Actions storage
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cleanup-actions-storage.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '43 18 * * *'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Keep only the 3 newest Actions artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          tmp="$(mktemp)"
+
+          gh api --paginate "repos/$repo/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | [(.id|tostring), .created_at, .name, (.size_in_bytes|tostring)] | @tsv' \
+            | sort -t $'\t' -k2,2r > "$tmp"
+
+          kept=0
+          deleted=0
+          reclaimed=0
+
+          while IFS=$'\t' read -r id created name size; do
+            [[ -z "${id:-}" ]] && continue
+            if (( kept < 3 )); then
+              echo "KEEP   $created  $name  ($size bytes)"
+              kept=$((kept + 1))
+            else
+              gh api --method DELETE "repos/$repo/actions/artifacts/$id"
+              echo "DELETE $created  $name  ($size bytes)"
+              deleted=$((deleted + 1))
+              reclaimed=$((reclaimed + size))
+            fi
+          done < "$tmp"
+
+          echo "Kept artifacts: $kept"
+          echo "Deleted artifacts: $deleted"
+          echo "Approx bytes removed: $reclaimed"
