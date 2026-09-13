@@ -11,20 +11,15 @@
   <style>
     *{box-sizing:border-box}
     body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;background:linear-gradient(180deg,#fffaf5 0%,#fff4ec 100%);color:#493b35;min-height:100vh}
-    .wrap{max-width:640px;margin:0 auto;padding:42px 20px 56px}
-    .hero{text-align:center;margin-bottom:28px}
+    .wrap{max-width:640px;margin:0 auto;padding:42px 20px 56px}.hero{text-align:center;margin-bottom:28px}
     .badge{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid #f1ddd0;font-size:13px;color:#9a6d58;box-shadow:0 5px 18px rgba(115,77,56,.06)}
-    h1{font-size:34px;line-height:1.15;margin:18px 0 10px;letter-spacing:-1px}
-    .lead{margin:0 auto;color:#826f65;line-height:1.7;font-size:15px;max-width:500px}
+    h1{font-size:34px;line-height:1.15;margin:18px 0 10px;letter-spacing:-1px}.lead{margin:0 auto;color:#826f65;line-height:1.7;font-size:15px;max-width:500px}
     .card{background:rgba(255,255,255,.92);border:1px solid #f0dfd5;border-radius:26px;padding:22px;margin:16px 0;box-shadow:0 12px 36px rgba(100,67,49,.08)}
-    .platform{display:flex;align-items:center;gap:14px;margin-bottom:14px}
-    .icon{width:48px;height:48px;display:grid;place-items:center;border-radius:16px;background:#fff1e8;font-size:25px}
-    .platform h2{font-size:20px;margin:0 0 3px}.sub{font-size:13px;color:#9b867a}
-    .btn{display:flex;align-items:center;justify-content:center;text-decoration:none;width:100%;min-height:54px;border-radius:17px;font-weight:750;font-size:16px;margin-top:14px;transition:.15s transform}.btn:active{transform:scale(.985)}
+    .platform{display:flex;align-items:center;gap:14px;margin-bottom:14px}.icon{width:48px;height:48px;display:grid;place-items:center;border-radius:16px;background:#fff1e8;font-size:25px}
+    .platform h2{font-size:20px;margin:0 0 3px}.sub{font-size:13px;color:#9b867a}.btn{display:flex;align-items:center;justify-content:center;text-decoration:none;width:100%;min-height:54px;border-radius:17px;font-weight:750;font-size:16px;margin-top:14px;transition:.15s transform}.btn:active{transform:scale(.985)}
     .android{background:#d97861;color:white;box-shadow:0 8px 20px rgba(217,120,97,.22)}.iphone{background:#665b75;color:white;box-shadow:0 8px 20px rgba(102,91,117,.18)}
     .steps{margin:15px 0 0;padding:0;list-style:none;counter-reset:item;color:#74635b;font-size:14px;line-height:1.65}.steps li{position:relative;padding-left:28px;margin:7px 0;counter-increment:item}.steps li:before{content:counter(item);position:absolute;left:0;top:2px;width:19px;height:19px;border-radius:50%;display:grid;place-items:center;background:#f4e5dc;color:#8d6250;font-size:11px;font-weight:700}
-    .cloud{margin-top:11px;padding:10px 12px;border-radius:14px;background:#eef7f0;border:1px solid #d8eadc;color:#3d7050;font-size:12px;line-height:1.6}
-    .note{margin-top:22px;padding:15px 17px;border-radius:18px;background:#fff8e9;border:1px solid #f1e1bc;color:#7c6846;font-size:13px;line-height:1.65}.version{text-align:center;color:#ad9b91;font-size:12px;margin-top:24px}
+    .cloud{margin-top:11px;padding:10px 12px;border-radius:14px;background:#eef7f0;border:1px solid #d8eadc;color:#3d7050;font-size:12px;line-height:1.65}.note{margin-top:22px;padding:15px 17px;border-radius:18px;background:#fff8e9;border:1px solid #f1e1bc;color:#7c6846;font-size:13px;line-height:1.65}.version{text-align:center;color:#ad9b91;font-size:12px;margin-top:24px}
     @media(max-width:420px){.wrap{padding-top:30px}h1{font-size:30px}.card{padding:19px;border-radius:23px}}
   </style>
 </head>
@@ -33,24 +28,25 @@
     <section class="hero">
       <div class="badge">🔎 比價簿・朋友分享版</div>
       <h1>選你的手機就可以用</h1>
-      <p class="lead">現在 Android 與 iPhone 都使用同一套帳號雲端資料；換手機登入同一帳號，商品與價格紀錄可以帶回來。</p>
+      <p class="lead">Android 與 iPhone 使用同一套帳號雲端資料；換手機登入同一帳號，商品、價格紀錄與已上傳的照片都可以帶回來。</p>
     </section>
 
     <section class="card">
-      <div class="platform"><div class="icon">🤖</div><div><h2>Android</h2><div class="sub">原生 App ・ v1.6.7 登入記住修正版</div></div></div>
-      <a class="btn android" href="https://izvrvlufxajezukyvgue.supabase.co/storage/v1/object/public/app-downloads/bijiabu-v1.6.7.apk">下載 Android APK</a>
-      <div class="cloud">☁️ v1.6.7 除了保留 Google 登入與 Android 15／16 安全區修正，另外把登入憑證同步保存在 App 自己的本機儲存中；正常關閉再打開比價簿時，會自動恢復登入，不需要每次重新登入。</div>
-      <ol class="steps"><li>下載完成後直接覆蓋安裝，不要先解除安裝舊 App。</li><li>Android 若詢問是否更新此應用程式，請選「更新」。</li><li>更新後請登入一次；之後正常關閉再開啟時會維持登入。</li></ol>
+      <div class="platform"><div class="icon">🤖</div><div><h2>Android</h2><div class="sub">原生 App ・ v1.6.8 快速記錄版</div></div></div>
+      <a class="btn android" href="https://izvrvlufxajezukyvgue.supabase.co/storage/v1/object/public/app-downloads/bijiabu-v1.6.8.apk">下載 Android APK</a>
+      <div class="cloud">☁️ v1.6.8 新增「快速記價格」、訂單截圖文字辨識、舊商品補照片、每筆價格附訂單截圖，以及私人雲端照片保存。照片會先壓縮再上傳，刪除照片或紀錄時也會同步清理雲端檔案。</div>
+      <ol class="steps"><li>直接覆蓋安裝，不要先解除安裝舊 App。</li><li>Android 若詢問是否更新此應用程式，請選「更新」。</li><li>第一次使用訂單截圖辨識時，Google Play 服務可能需要短暫下載辨識模組；若顯示「辨識模組正在準備」，保持網路連線後稍等幾秒再試即可。</li></ol>
     </section>
 
     <section class="card">
       <div class="platform"><div class="icon">🍎</div><div><h2>iPhone</h2><div class="sub">免 App Store ・ 雲端 PWA</div></div></div>
       <a class="btn iphone" href="./pricebook/">開啟 iPhone 版比價簿</a>
+      <div class="cloud">iPhone 同樣可使用快速記價格、商品照片與訂單截圖的私人雲端保存；Android 的「自動辨識訂單截圖」屬原生功能，目前只在 Android v1.6.8 提供。</div>
       <ol class="steps"><li>請用 Safari 開啟雲端版比價簿並登入。</li><li>點 Safari 的「分享」→「加入主畫面」→「加入」。</li></ol>
     </section>
 
-    <div class="note">💡 每個帳號只能看到自己的比價資料。原本的本機自動備份與 JSON 匯出仍保留，現在再多一層 Supabase 雲端同步與雲端版本備份。</div>
-    <div class="version">比價簿 Android v1.6.7 ・ iPhone PWA ・ Cloud Sync</div>
+    <div class="note">💡 每個帳號只能讀取自己的比價資料與私人照片。照片確認顯示／上傳成功後，手機相簿中的原圖可以自行刪除；換手機後登入同一帳號仍能讀取雲端照片。</div>
+    <div class="version">比價簿 Android v1.6.8 ・ iPhone PWA ・ Cloud Sync</div>
   </main>
 </body>
 </html>
