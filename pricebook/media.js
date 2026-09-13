@@ -66,4 +66,21 @@
   }
 
   window.pricebookMedia = {upload,getUrl,remove,usage,bucket:BUCKET};
+
+  function injectRefinement(){
+    try{
+      const frame=document.getElementById('appFrame');
+      const doc=frame&&frame.contentDocument;
+      if(!doc||!doc.body||doc.getElementById('pricebook-enhancements-patch'))return;
+      const script=doc.createElement('script');
+      script.id='pricebook-enhancements-patch';
+      script.src='./enhancements-patch.js?v=20260914-ocr2';
+      doc.body.appendChild(script);
+    }catch(e){}
+  }
+  const frame=document.getElementById('appFrame');
+  if(frame){
+    frame.addEventListener('load',()=>setTimeout(injectRefinement,120));
+    setTimeout(injectRefinement,180);
+  }
 })();
