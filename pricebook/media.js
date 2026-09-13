@@ -14,10 +14,6 @@
   }
   async function normalizeBlob(blob){
     if(blob instanceof Blob) return blob;
-    // app.html lives in a same-origin iframe. A Blob created in that frame is
-    // valid binary data, but `instanceof Blob` in the parent window can be
-    // false because each frame has its own global constructor. Re-wrap it in
-    // the parent realm so Supabase Storage receives a normal Blob.
     if(blob && typeof blob.arrayBuffer === 'function' && typeof blob.size === 'number'){
       const bytes = await blob.arrayBuffer();
       return new Blob([bytes], {type: blob.type || 'image/jpeg'});
@@ -86,7 +82,7 @@
       if(!doc||!doc.body||doc.getElementById('pricebook-enhancements-patch'))return;
       const script=doc.createElement('script');
       script.id='pricebook-enhancements-patch';
-      script.src='./enhancements-patch.js?v=20260914-ocr2';
+      script.src='./enhancements-patch.js?v=20260914-ocr3';
       doc.body.appendChild(script);
     }catch(e){}
   }
