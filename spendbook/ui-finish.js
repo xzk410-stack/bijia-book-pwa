@@ -3,6 +3,10 @@
   window.__spendbookUiFinishLoaded = true;
 
   const $ = id => document.getElementById(id);
+  const localDate = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  };
 
   function installLocalStyles() {
     if ($('spendbook-ui-finish-style')) return;
@@ -14,13 +18,14 @@
       #settings .usage-guide summary::-webkit-details-marker{display:none}
       #settings .usage-guide summary b{display:block}
       #settings .usage-guide summary small{display:block;color:var(--muted);margin-top:3px;line-height:1.45}
-      #settings .usage-guide .guide-toggle{font-size:21px;color:var(--accent);font-weight:500;line-height:1}
+      #settings .usage-guide .guide-toggle{font-size:21px;color:var(--accent);font-weight:500;line-height:1;transition:transform .15s ease}
       #settings .usage-guide[open] .guide-toggle{transform:rotate(45deg)}
       #settings .usage-guide-body{border-top:1px solid var(--border);padding:12px 14px 14px;color:#58605d;font-size:12px;line-height:1.7}
       #settings .usage-guide-body b{color:var(--text)}
       #settings .usage-guide-body p{margin:0 0 10px}
       #settings .usage-guide-body p:last-child{margin-bottom:0}
       #settings .cloud-note{background:#f7f8ff;border:1px solid #e7e9f7;border-radius:13px;padding:10px 11px;margin-top:10px}
+      #editSheet .required-mark{color:#c75b67;font-weight:800;margin-left:3px}
     `;
     document.head.appendChild(style);
   }
@@ -42,6 +47,7 @@
         <p><b>付款：</b>尚未付清的訂單可用「新增付款／付尾款」逐次登記；已付清與物流狀態是兩件事，例如可以同時是「已付清＋待出貨」。</p>
         <p><b>物流：</b>待出貨 → 已出貨／運送中 → 已到貨／待取貨 → 已完成。完成的訂單會在預設紀錄排序中自動往下。</p>
         <p><b>快速查看：</b>首頁的「待付款、待出貨、運送中、待取貨」都可以直接點，會跳到紀錄頁並套用對應篩選。</p>
+        <p><b>首頁金額：</b>「本月總消費、已付款、待付款」只統計本月新增的消費紀錄；「待到貨」則顯示目前仍在待出貨／運送中的訂單數。</p>
         <p><b>搜尋與排序：</b>紀錄頁可搜尋商品、賣家與平台；也可切換最近新增、金額高低與待付金額排序。</p>
         <div class="cloud-note"><b>雲端與備份：</b>登入後資料會自動同步到自己的雲端帳號；設定裡的 JSON「備份資料」是額外留存用，不需要每次手動備份。</div>
       </div>`;
@@ -125,6 +131,60 @@
     try { go = wrapped; } catch {}
   }
 
+  function updateHomeSummary() {
+    if (typeof records === 'undefined' || !Array.isArray(records)) return;
+    const now = new Date();
+    const monthRecords = records.filter(r => {
+      const d = new Date(Number(r?.createdAt || 0));
+      return !Number.isNaN(d.getTime()) && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    });
+    const total = monthRecords.reduce((sum, r) => sum + Math.max(0, Number(r.total || 0)), 0);
+    const paid = monthRecords.reduce((sum, r) => sum + Math.min(Math.max(0, Number(r.paid || 0)), Math.max(0, Number(r.total || 0))), 0);
+    const unpaid = monthRecords.reduce((sum, r) => sum + Math.max(Number(r.total || 0) - Number(r.paid || 0), 0), 0);
+    const waiting = records.filter(r => ['尚未出貨','已出貨','運送中'].includes(r.status)).length;
+    if ($('homeTotal') && typeof money === 'function') $('homeTotal').textContent = money(total);
+    if ($('homePaid')) $('homePaid').textContent = String(Math.round(paid)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    if ($('homeUnpaid')) $('homeUnpaid').textContent = String(Math.round(unpaid)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    if ($('homeWaiting')) $('homeWaiting').textContent = `${waiting} 筆`;
+  }
+
+  function wrapRenderForSummary() {
+    if (typeof render !== 'function' || render.__uiFinishSummaryWrapped) return;
+    const old = render;
+    const wrapped = function() {
+      const result = old.apply(this, arguments);
+      updateHomeSummary();
+      return result;
+    };
+    wrapped.__uiFinishSummaryWrapped = true;
+    try { render = wrapped; } catch {}
+  }
+
+  function fixPaymentLocalDate() {
+    if (typeof applyPayment !== 'function' || applyPayment.__uiFinishWrapped) return;
+    const old = applyPayment;
+    const wrapped = function() {
+      const index = typeof editingPaymentIndex !== 'undefined' ? editingPaymentIndex : null;
+      const before = index !== null && records?.[index]?.payments ? records[index].payments.length : 0;
+      const result = old.apply(this, arguments);
+      if (index !== null && records?.[index]?.payments?.length > before) {
+        records[index].payments[records[index].payments.length - 1].date = localDate();
+        if (typeof persist === 'function') persist();
+      }
+      return result;
+    };
+    wrapped.__uiFinishWrapped = true;
+    try { applyPayment = wrapped; } catch {}
+  }
+
+  function markEditRequired() {
+    [['editName','商品明細'],['editTotal','訂單總額']].forEach(([id]) => {
+      const input = $(id);
+      const label = input?.closest('.field')?.querySelector('label');
+      if (label && !label.querySelector('.required-mark')) label.insertAdjacentHTML('beforeend','<span class="required-mark">＊</span>');
+    });
+  }
+
   function polishSettingsCopy() {
     const settings = $('settings');
     if (!settings) return;
@@ -142,6 +202,10 @@
     polishSettingsCopy();
     installParentHeaderBehavior();
     makeNavigationRestoreHeader();
+    wrapRenderForSummary();
+    fixPaymentLocalDate();
+    markEditRequired();
+    updateHomeSummary();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run, {once:true});
