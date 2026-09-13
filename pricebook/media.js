@@ -91,7 +91,7 @@
       if(!doc.getElementById('pricebook-product-edit-patch')){
         const script=doc.createElement('script');
         script.id='pricebook-product-edit-patch';
-        script.src='./product-edit-patch.js?v=20260914-edit2';
+        script.src='./product-edit-patch.js?v=20260914-edit3';
         doc.body.appendChild(script);
       }
 
