@@ -79,11 +79,21 @@
     try{
       const frame=document.getElementById('appFrame');
       const doc=frame&&frame.contentDocument;
-      if(!doc||!doc.body||doc.getElementById('pricebook-enhancements-patch'))return;
-      const script=doc.createElement('script');
-      script.id='pricebook-enhancements-patch';
-      script.src='./enhancements-patch.js?v=20260914-speed1';
-      doc.body.appendChild(script);
+      if(!doc||!doc.body)return;
+
+      if(!doc.getElementById('pricebook-enhancements-patch')){
+        const script=doc.createElement('script');
+        script.id='pricebook-enhancements-patch';
+        script.src='./enhancements-patch.js?v=20260914-speed1';
+        doc.body.appendChild(script);
+      }
+
+      if(!doc.getElementById('pricebook-product-edit-patch')){
+        const script=doc.createElement('script');
+        script.id='pricebook-product-edit-patch';
+        script.src='./product-edit-patch.js?v=20260914-edit1';
+        doc.body.appendChild(script);
+      }
     }catch(e){}
   }
   const frame=document.getElementById('appFrame');
