@@ -33,11 +33,18 @@
 
     window.onOrderOcrResult=(payload)=>{
       try{
-        const result=typeof payload==='string'?JSON.parse(payload):payload;if(!result?.ok)throw new Error(result?.error||'辨識失敗');
+        const result=typeof payload==='string'?JSON.parse(payload):payload;
+        if(!result?.ok){
+          setStatus(result?.error||'沒有成功辨識文字，可直接手動填寫；截圖仍可一起保存。','warn');
+          return;
+        }
         const p=parse(result.text||'');
-        if(p.product)$('quickProduct').value=p.product;if(p.store)$('quickStore').value=p.store;if(p.qty)$('quickQty').value=p.qty;if(p.total)$('quickTotal').value=p.total;
+        if(p.product)$('quickProduct').value=p.product;
+        if(p.store)$('quickStore').value=p.store;
+        if(p.qty)$('quickQty').value=p.qty;
+        if(p.total)$('quickTotal').value=p.total;
         if(p.orderTotal&&p.total&&p.orderTotal!==p.total)$('quickNote').value=`訂單實付 $${p.orderTotal}；商品總額 $${p.total}`;
-        const evt=new Event('input',{bubbles:true});$('quickQty')?.dispatchEvent(evt);$('quickTotal')?.dispatchEvent(evt);
+        const evt=new Event('input',{bubbles:true});$('quickQty')?.dispatchEvent(evt);$('quickTotal')?.dispatchEvent(evt);$('quickProduct')?.dispatchEvent(evt);
         setStatus('已辨識並帶入可判斷的欄位，請確認商品名稱、數量與商品總額後再儲存。','ok');
       }catch(e){setStatus('沒有成功辨識文字，可直接手動填寫；截圖仍可一起保存。','warn');}
     };
@@ -50,6 +57,22 @@
         $('quickUnit')?.dispatchEvent(new Event('change',{bubbles:true}));
       }catch{}
     });
+
+    // 條碼查不到商品時仍直接進「完整新增」，不要被快速新增選單攔住。
+    if(typeof window.openNewProductForBarcode==='function'){
+      window.openNewProductForBarcode=function(code,data=null){
+        closeModal('barcodeModal');
+        openRecordModal('__barcode_new__');
+        setAddMode('new');
+        document.getElementById('newBarcode').value=normalizeBarcode(code);
+        if(data){
+          document.getElementById('newName').value=data.name||'';
+          document.getElementById('newBrand').value=data.brand||'';
+          const cat=data.productType==='food'?'食品':data.productType==='beauty'?'美妝':data.productType==='petfood'?'寵物用品':'未分類';
+          document.getElementById('newCategory').value=cat;
+        }
+      };
+    }
   }
   boot();
 })();
