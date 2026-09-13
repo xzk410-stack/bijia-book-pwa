@@ -91,7 +91,7 @@
       if(!doc.getElementById('pricebook-product-edit-patch')){
         const script=doc.createElement('script');
         script.id='pricebook-product-edit-patch';
-        script.src='./product-edit-patch.js?v=20260914-edit1';
+        script.src='./product-edit-patch.js?v=20260914-edit2';
         doc.body.appendChild(script);
       }
 
@@ -99,6 +99,13 @@
         const script=doc.createElement('script');
         script.id='pricebook-chart-readability-patch';
         script.src='./chart-readability-patch.js?v=20260914-chart1';
+        doc.body.appendChild(script);
+      }
+
+      if(!doc.getElementById('pricebook-detail-ui-patch')){
+        const script=doc.createElement('script');
+        script.id='pricebook-detail-ui-patch';
+        script.src='./detail-ui-patch.js?v=20260914-detail1';
         doc.body.appendChild(script);
       }
     }catch(e){}
