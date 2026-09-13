@@ -42,8 +42,8 @@
     input.addEventListener('blur',()=>setTimeout(()=>{input.value=canonical(input.value,type);box.classList.remove('show')},100));
   }
   function run(){
-    install('newBrand','brand');install('editProductBrand','brand');
-    install('newCategory','category');install('editProductCategory','category');
+    install('newBrand','brand');install('editProductBrand','brand');install('quickBrand','brand');
+    install('newCategory','category');install('editProductCategory','category');install('quickCategory','category');
     install('recordStore','store');install('quickStore','store');install('cmpStore','store');
   }
   run();let n=0;const t=setInterval(()=>{run();if(++n>20)clearInterval(t)},300);
