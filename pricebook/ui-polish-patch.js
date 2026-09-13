@@ -14,5 +14,6 @@
   add('pricebook-final-quick-patch','./final-quick-patch.js?v=20260914-final3');
   add('pricebook-final-cleanup-patch','./final-cleanup-patch.js?v=20260914-final3');
   add('pricebook-quick-modal-hotfix','./quick-modal-hotfix.js?v=20260914-hotfix1');
-  add('pricebook-smart-fields-patch','./smart-fields-patch.js?v=20260914-smart1');
+  add('pricebook-quick-new-product-patch','./quick-new-product-patch.js?v=20260914-quickmeta1');
+  add('pricebook-smart-fields-patch','./smart-fields-patch.js?v=20260914-smart2');
 })();
