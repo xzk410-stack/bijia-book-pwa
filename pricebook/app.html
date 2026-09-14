@@ -215,6 +215,40 @@ nav{max-width:100vw}
 <meta name="format-detection" content="telephone=no">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.7/html5-qrcode.min.js"></script>
 
+
+<style id="pricebook-calm-home">
+html body #homeView .hero{background:transparent!important;border:0!important;box-shadow:none!important;padding:0 2px 12px!important;margin:0!important;border-radius:0!important}
+html body #homeView .hero:before,html body #homeView .hero:after,html body #homeView .hero-title,html body #homeView .hero-big,html body #homeView .hero-sub{display:none!important}
+html body #homeView .stats{display:flex!important;justify-content:flex-start!important;gap:0!important;margin:0!important}
+html body #homeView .stat{flex:0 1 auto!important;background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0 12px!important;text-align:left!important}
+html body #homeView .stat:first-child{padding-left:0!important}
+html body #homeView .stat+.stat{border-left:1px solid var(--line)!important}
+html body #homeView .stat b{display:inline!important;font-size:13px!important;margin-right:4px!important}
+html body #homeView .stat span{font-size:12px!important}
+html body .app>header{padding:16px 18px 12px!important;background:transparent!important}
+html body .logo p{display:none!important}
+html body .logo h1{font-size:23px!important}
+html body #homeView .toolbar{gap:7px!important;padding:2px 0 14px!important}
+html body #homeView .chip{font-size:13px!important;padding:8px 12px!important;box-shadow:none!important}
+html body #homeView .product{border-radius:17px!important;padding:16px!important;box-shadow:none!important;border:1px solid #e7e8e0!important}
+html body #homeView .product-top .thumb:not(:has(img)){display:none!important}
+html body #homeView .pname{font-size:15px!important;white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5!important}
+html body #homeView .meta{font-size:11px!important;line-height:1.6!important}
+html body #homeView .price-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;margin-top:14px!important}
+html body #homeView .price-box{background:none!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important}
+html body #homeView .price-box small{font-size:11px!important}
+html body #homeView .price-box b{font-size:16px!important;line-height:1.5!important;white-space:normal!important;overflow-wrap:anywhere}
+html body #homeView .price-box:first-child b{font-size:20px!important}
+html body #homeView .price-box:nth-child(3){grid-column:1/-1!important;display:flex!important;align-items:baseline;gap:8px;border-top:1px solid #f0eee8!important;padding-top:9px!important}
+html body #homeView .price-box:nth-child(3) b{font-size:13px!important;font-weight:600!important}
+html body #homeView .pactions{display:flex!important;justify-content:flex-end!important;gap:8px!important;margin-top:12px!important}
+html body #homeView .pactions .btn{flex:0 0 auto!important;width:auto!important;min-height:40px!important;padding:8px 13px!important;font-size:12px!important;border-radius:10px!important;box-shadow:none!important}
+html body #homeView .pactions .btn.ghost{background:transparent!important}
+html body #homeView .home-heading{display:flex;align-items:center;gap:10px;margin:0 0 10px}
+html body #homeView .home-heading h2{margin-right:auto}
+html body #homeView #addBtn{position:static!important;inset:auto!important;transform:none!important;width:auto!important;min-height:40px!important;padding:9px 12px!important;border-radius:11px!important;font-size:12px!important;box-shadow:none!important;display:inline-flex!important;align-items:center;gap:5px}
+html body #homeView #sortBtn{font-size:11px!important}
+</style>
 </head>
 <body>
 
@@ -263,7 +297,7 @@ nav{max-width:100vw}
     </div>
   </div>
   <div class="toolbar" id="categoryChips"></div>
-  <div class="section-title"><h2>商品</h2><button id="sortBtn">最近更新 ↓</button></div>
+  <div class="section-title home-heading"><h2>商品</h2><button id="sortBtn">最近更新 ↓</button><button class="fab" id="addBtn"><svg class="ui-icon"><use href="#i-plus"></use></svg>新增價格</button></div>
   <div id="productList" class="list"></div>
 </section>
 
@@ -346,7 +380,7 @@ nav{max-width:100vw}
 </section>
 </main>
 
-<button class="fab" id="addBtn"><svg class="ui-icon"><use href="#i-plus"></use></svg>新增價格</button>
+
 
 <nav>
   <button class="navbtn active" data-view="homeView"><span class="nav-icon-wrap"><svg class="ui-icon"><use href="#i-home"></use></svg></span>首頁</button>
@@ -579,6 +613,7 @@ function statsOf(p){
 function displayUnitPrice(p,val){return val==null?'—':preciseMoney(val)+' / '+esc(p.unit||'件')}
 function compareStatus(p,currentUnit){
  const s=statsOf(p); if(!s.count)return {cls:'',text:'第一筆價格'};
+ if(s.count===1)return {cls:'',text:'僅 1 筆紀錄'};
  const diff=(currentUnit-s.low)/s.low*100, near=Number(db.settings.nearLow||5);
  if(diff<-.001)return {cls:'good',text:'🎉 比歷史最低還低 '+fmt(Math.abs(diff),1)+'%'};
  if(diff<=near)return {cls:'good',text:'🔥 接近歷史最低價（+'+fmt(diff,1)+'%）'};
