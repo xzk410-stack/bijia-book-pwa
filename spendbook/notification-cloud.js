@@ -39,19 +39,31 @@ async function ensureSpendPushSubscription(){
   await saveSpendNotificationSettings({enabled:true});
   return true;
 }
-async function testSpendPush(){
-  if(!session)throw new Error('請先登入');
-  if(androidNativeNotifications()){
-    const result=String(Android.testNativeNotification?.()||'');
-    if(result==='permission_required')throw new Error('請先允許「我的消費簿」傳送通知，再按一次測試通知');
-    if(result!=='sent')throw new Error('Android 測試通知傳送失敗');
-    return {ok:true,sent:1,native:true};
-  }
-  const current=(await db.auth.getSession()).data.session;
-  if(!current?.access_token)throw new Error('登入已失效，請重新登入');
-  const res=await fetch(`${SUPABASE_URL}/functions/v1/spend-test-push`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${current.access_token}`,'apikey':SUPABASE_KEY},body:'{}'});
-  const out=await res.json().catch(()=>({}));
-  if(!res.ok||!out?.ok)throw new Error(out?.error||'測試通知傳送失敗');
-  return out;
+window.spendNotifications={getSettings:getSpendNotificationSettings,saveSettings:saveSpendNotificationSettings,ensurePush:ensureSpendPushSubscription,supportsPush:spendPushSupport};
+
+function removeSpendbookTestNotificationUi(){
+  const frame=document.getElementById('appFrame');
+  if(!frame)return;
+  const observe=()=>{
+    try{
+      const d=frame.contentDocument;
+      if(!d||!d.body)return;
+      const clean=()=>{
+        const button=d.getElementById('noticeTestBtn');
+        if(button){
+          const row=button.closest('.notice-actions');
+          if(row)row.remove();else button.remove();
+        }
+      };
+      clean();
+      if(!d.documentElement.dataset.spendbookNoTestObserver){
+        d.documentElement.dataset.spendbookNoTestObserver='1';
+        new MutationObserver(clean).observe(d.body,{childList:true,subtree:true});
+      }
+    }catch{}
+  };
+  frame.addEventListener('load',()=>setTimeout(observe,0));
+  setTimeout(observe,0);
 }
-window.spendNotifications={getSettings:getSpendNotificationSettings,saveSettings:saveSpendNotificationSettings,ensurePush:ensureSpendPushSubscription,testPush:testSpendPush,supportsPush:spendPushSupport};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',removeSpendbookTestNotificationUi,{once:true});
+else removeSpendbookTestNotificationUi();
