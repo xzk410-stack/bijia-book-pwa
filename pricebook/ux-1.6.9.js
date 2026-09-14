@@ -23,7 +23,7 @@
     .pb-combo-input{width:100%;min-height:46px;border:1px solid var(--line);border-radius:13px;background:#fff;padding:11px 38px 11px 12px;outline:none;color:var(--text)}
     .pb-combo-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,139,104,.11)}
     .pb-combo-arrow{position:absolute;right:11px;top:13px;color:var(--muted);pointer-events:none}
-    .pb-combo-menu{display:none;position:absolute;left:0;right:0;z-index:40;margin-top:5px;max-height:210px;overflow:auto;border:1px solid var(--line);border-radius:13px;background:#fff;box-shadow:0 10px 28px rgba(45,76,59,.14)}
+    .pb-combo-menu{display:none;position:relative;width:100%;margin-top:5px;max-height:210px;overflow:auto;border:1px solid var(--line);border-radius:13px;background:#fff;box-shadow:0 10px 28px rgba(45,76,59,.14)}
     .pb-combo.open .pb-combo-menu{display:block}
     .pb-combo-option{display:block;width:100%;border:0;border-bottom:1px solid #f0ede6;background:#fff;text-align:left;padding:10px 12px;color:var(--text)}
     .pb-combo-option:last-child{border-bottom:0}
@@ -99,6 +99,8 @@
     const input=$(id);
     if(!input || input.dataset.uxSuggest==='1' || input.dataset.smart==='1' || input.dataset.pbSuggest==='1') return;
     input.dataset.uxSuggest='1';
+    input.removeAttribute('list');
+    input.autocomplete='off';
     const menu=document.createElement('div'); menu.className='pb-combo-menu'; input.parentElement.classList.add('pb-combo'); input.insertAdjacentElement('afterend',menu);
     const render=()=>{
       const q=clean(input.value).toLowerCase();
