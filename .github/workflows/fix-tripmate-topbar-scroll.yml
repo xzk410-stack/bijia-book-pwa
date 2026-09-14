@@ -1,0 +1,39 @@
+name: Fix TripMate topbar scroll
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-tripmate-topbar-scroll.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Make TripMate header scroll with page
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('tripmate-live/index.html')
+          s = p.read_text(encoding='utf-8')
+          old = '.topbar{position:sticky;top:0;z-index:20;'
+          new = '.topbar{position:relative;top:auto;z-index:20;'
+          if old not in s:
+              raise SystemExit('target topbar rule not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name 'xzk410-stack'
+          git config user.email 'xzk410@gmail.com'
+          git add tripmate-live/index.html
+          git commit -m 'Let TripMate header scroll away with content'
+          git push
