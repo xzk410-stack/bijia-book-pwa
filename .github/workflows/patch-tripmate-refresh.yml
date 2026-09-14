@@ -1,0 +1,41 @@
+name: Patch TripMate refresh behavior
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-tripmate-refresh.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch service worker registration
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('tripmate-live/index.html')
+          s=p.read_text(encoding='utf-8')
+          old="if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});"
+          new="if('serviceWorker'in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('./sw.js?v=20260914-r1',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});}"
+          if old not in s:
+              raise SystemExit('target registration not found')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+      - name: Verify patch
+        run: |
+          grep -Fq "register('./sw.js?v=20260914-r1',{updateViaCache:'none'})" tripmate-live/index.html
+          grep -Fq ".topbar{position:relative;top:auto" tripmate-live/index.html
+          grep -Fq 'data-trip-empty-card="1"' tripmate-live/index.html
+      - name: Remove one-time workflow and commit
+        run: |
+          rm .github/workflows/patch-tripmate-refresh.yml
+          git config user.name "xzk410-stack"
+          git config user.email "xzk410@gmail.com"
+          git add tripmate-live/index.html .github/workflows/patch-tripmate-refresh.yml
+          git commit -m "Make TripMate refresh its live UI reliably"
+          git push
