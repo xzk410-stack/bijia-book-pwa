@@ -1,0 +1,121 @@
+name: Restore Spendbook push notification system
+
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-spendbook-push-system.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore cloud reminder fields and push bridge
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          cloud = Path('spendbook/cloud.js')
+          s = cloud.read_text(encoding='utf-8')
+          s = s.replace(
+              "shipdate:r.ship_date||'',paymethod:r.payment_method||'',note:r.note||'',",
+              "shipdate:r.ship_date||'',paymentDueDate:r.payment_due_date||'',paymethod:r.payment_method||'',note:r.note||'',",
+              1,
+          )
+          s = s.replace(
+              "ship_date:r.shipdate||null,payment_method:r.paymethod||'',note:r.note||''",
+              "ship_date:r.shipdate||null,payment_due_date:r.paymentDueDate||null,payment_method:r.paymethod||'',note:r.note||''",
+              1,
+          )
+
+          marker = 'SPEND_VAPID_PUBLIC'
+          if marker not in s:
+              bridge = r'''
+
+const SPEND_VAPID_PUBLIC='BKdpCVRPOR7CrG6AVWWxlocVKx3cwZ_bpzw2DNbUBL46OACHoQA4gco4cQEE5YlWlloauGer5Pz0ormLHqokTrk';
+function spendUrlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4),base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
+async function getSpendNotificationSettings(){
+  if(!session)return null;
+  const {data,error}=await db.from('spend_notification_settings').select('*').eq('user_id',session.user.id).maybeSingle();
+  if(error)throw error;
+  return data||{user_id:session.user.id,enabled:true,payment_day_before:true,payment_due_day:true,shipping_due_day:true,shipping_overdue:true,pickup:true,reminder_hour:9,timezone:'Asia/Taipei'};
+}
+async function saveSpendNotificationSettings(patch){
+  if(!session)throw new Error('請先登入');
+  const current=await getSpendNotificationSettings();
+  const row={...current,...patch,user_id:session.user.id,timezone:'Asia/Taipei',updated_at:new Date().toISOString()};
+  const {data,error}=await db.from('spend_notification_settings').upsert(row,{onConflict:'user_id'}).select('*').single();
+  if(error)throw error;
+  return data;
+}
+function spendPushSupport(){return !!('serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window)}
+async function ensureSpendPushSubscription(){
+  if(!session)throw new Error('請先登入');
+  if(!spendPushSupport())throw new Error('這個開啟方式不支援背景推播');
+  const permission=await Notification.requestPermission();
+  if(permission!=='granted')throw new Error('通知權限尚未允許');
+  const reg=await navigator.serviceWorker.register('./sw.js');
+  await navigator.serviceWorker.ready;
+  let sub=await reg.pushManager.getSubscription();
+  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:spendUrlBase64ToUint8Array(SPEND_VAPID_PUBLIC)});
+  const j=sub.toJSON(),p256dh=j.keys?.p256dh||'',authKey=j.keys?.auth||'';
+  if(!p256dh||!authKey)throw new Error('無法取得推播金鑰');
+  const row={user_id:session.user.id,endpoint:j.endpoint,p256dh,auth_key:authKey,user_agent:navigator.userAgent,active:true,updated_at:new Date().toISOString()};
+  const {error}=await db.from('spend_push_subscriptions').upsert(row,{onConflict:'endpoint'});
+  if(error)throw error;
+  await saveSpendNotificationSettings({enabled:true});
+  return true;
+}
+async function testSpendPush(){
+  if(!session)throw new Error('請先登入');
+  const current=(await db.auth.getSession()).data.session;
+  if(!current?.access_token)throw new Error('登入已失效，請重新登入');
+  const res=await fetch(`${SUPABASE_URL}/functions/v1/spend-test-push`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${current.access_token}`,'apikey':SUPABASE_KEY},body:'{}'});
+  const out=await res.json().catch(()=>({}));
+  if(!res.ok||!out?.ok)throw new Error(out?.error||'測試通知傳送失敗');
+  return out;
+}
+window.spendNotifications={getSettings:getSpendNotificationSettings,saveSettings:saveSpendNotificationSettings,ensurePush:ensureSpendPushSubscription,testPush:testSpendPush,supportsPush:spendPushSupport};
+'''
+              s += bridge
+          cloud.write_text(s, encoding='utf-8')
+
+          sw = Path('spendbook/sw.js')
+          t = sw.read_text(encoding='utf-8')
+          t = t.replace("const CACHE='spendbook-v8'", "const CACHE='spendbook-v9'", 1)
+          marker2 = "self.addEventListener('push'"
+          if marker2 not in t:
+              t += r'''
+
+self.addEventListener('push',event=>{
+  let data={};
+  try{data=event.data?event.data.json():{}}catch{try{data={body:event.data?.text()||''}}catch{}}
+  const title=data.title||'我的消費簿';
+  const url=(data.url&&data.url!=='/')?data.url:'/bijia-book-pwa/spendbook/';
+  event.waitUntil(self.registration.showNotification(title,{body:data.body||'',icon:'./icon.svg',badge:'./icon.svg',tag:data.tag||'spend-reminder',data:{url},renotify:true}));
+});
+self.addEventListener('notificationclick',event=>{
+  event.notification.close();
+  const target=event.notification?.data?.url||'/bijia-book-pwa/spendbook/';
+  event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(list=>{
+    for(const client of list){if('focus' in client&&client.url.includes('/bijia-book-pwa/spendbook/')){client.navigate(target);return client.focus()}}
+    return clients.openWindow?clients.openWindow(target):undefined;
+  }));
+});
+'''
+          sw.write_text(t, encoding='utf-8')
+          PY
+
+      - name: Commit restored reminder plumbing
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add spendbook/cloud.js spendbook/sw.js
+          git diff --cached --check
+          git commit -m 'Restore Spendbook cloud deadline and push support' || exit 0
+          git push
