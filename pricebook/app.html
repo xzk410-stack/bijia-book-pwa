@@ -520,8 +520,9 @@ function smartNum(n,d=3){
 }
 function preciseMoney(n){
  if(n==null||!isFinite(n))return '—';
- const v=Number(Number(n).toFixed(2));
- return 'NT$'+v.toLocaleString('zh-TW',{maximumFractionDigits:2});
+ const v=Number(n);
+ const digits=Math.abs(v)<1?4:Math.abs(v)<10?3:2;
+ return 'NT$'+v.toLocaleString('zh-TW',{maximumFractionDigits:digits});
 }
 function packagePrice(r){return r&&Number(r.packCount)>0?r.twdPrice/Number(r.packCount):null}
 function displayPackagePrice(r){
