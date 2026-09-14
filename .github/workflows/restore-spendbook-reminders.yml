@@ -1,0 +1,66 @@
+name: Restore Spendbook deadline reminders
+
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-spendbook-reminders.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wire reminder module into Spendbook
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          index = Path('spendbook/index.html')
+          s = index.read_text(encoding='utf-8')
+          marker = 'spendbook-deadline-loader-20260914'
+          if marker not in s:
+              loader = r'''<script id="spendbook-deadline-loader-20260914">
+          (function(){
+            const frame=document.getElementById('appFrame');
+            if(!frame)return;
+            function inject(){
+              try{
+                const d=frame.contentDocument;
+                if(!d||!d.body||d.getElementById('spendbook-deadline-reminder-script'))return;
+                const x=d.createElement('script');
+                x.id='spendbook-deadline-reminder-script';
+                x.src='./deadline-reminder.js?v=20260914';
+                d.body.appendChild(x);
+              }catch(e){console.warn('deadline reminder loader skipped',e)}
+            }
+            frame.addEventListener('load',inject);
+            setTimeout(inject,0);
+            setTimeout(inject,1200);
+          })();
+          </script>
+          '''
+              s = s.replace('</body>', loader + '</body>')
+              index.write_text(s, encoding='utf-8')
+
+          sw = Path('spendbook/sw.js')
+          if sw.exists():
+              t = sw.read_text(encoding='utf-8')
+              if 'deadline-reminder.js' not in t and 'const ASSETS=[' in t:
+                  t = t.replace("'./app.html'", "'./app.html','./deadline-reminder.js'", 1)
+              t = t.replace("const CACHE='spendbook-v3'", "const CACHE='spendbook-v4'", 1)
+              sw.write_text(t, encoding='utf-8')
+          PY
+
+      - name: Commit reminder wiring
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add spendbook/index.html spendbook/sw.js
+          git diff --cached --check
+          git commit -m 'Enable Spendbook deadline reminders' || exit 0
+          git push
