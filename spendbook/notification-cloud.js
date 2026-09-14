@@ -1,5 +1,6 @@
 const SPEND_VAPID_PUBLIC='BKdpCVRPOR7CrG6AVWWxlocVKx3cwZ_bpzw2DNbUBL46OACHoQA4gco4cQEE5YlWlloauGer5Pz0ormLHqokTrk';
 function spendUrlBase64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4),base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
+function androidNativeNotifications(){try{return !!(window.Android&&typeof Android.supportsNativeNotifications==='function'&&Android.supportsNativeNotifications())}catch{return false}}
 async function getSpendNotificationSettings(){
   if(!session)return null;
   const {data,error}=await db.from('spend_notification_settings').select('*').eq('user_id',session.user.id).maybeSingle();
@@ -14,9 +15,15 @@ async function saveSpendNotificationSettings(patch){
   if(error)throw error;
   return data;
 }
-function spendPushSupport(){return !!('serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window)}
+function spendPushSupport(){return androidNativeNotifications()||!!('serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window)}
 async function ensureSpendPushSubscription(){
   if(!session)throw new Error('請先登入');
+  if(androidNativeNotifications()){
+    const result=String(Android.enableNativeNotifications?.()||'');
+    if(result==='unavailable')throw new Error('Android 背景通知目前無法啟用');
+    await saveSpendNotificationSettings({enabled:true});
+    return true;
+  }
   if(!spendPushSupport())throw new Error('這個開啟方式不支援背景推播');
   const permission=await Notification.requestPermission();
   if(permission!=='granted')throw new Error('通知權限尚未允許');
@@ -34,6 +41,12 @@ async function ensureSpendPushSubscription(){
 }
 async function testSpendPush(){
   if(!session)throw new Error('請先登入');
+  if(androidNativeNotifications()){
+    const result=String(Android.testNativeNotification?.()||'');
+    if(result==='permission_required')throw new Error('請先允許「我的消費簿」傳送通知，再按一次測試通知');
+    if(result!=='sent')throw new Error('Android 測試通知傳送失敗');
+    return {ok:true,sent:1,native:true};
+  }
   const current=(await db.auth.getSession()).data.session;
   if(!current?.access_token)throw new Error('登入已失效，請重新登入');
   const res=await fetch(`${SUPABASE_URL}/functions/v1/spend-test-push`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${current.access_token}`,'apikey':SUPABASE_KEY},body:'{}'});
