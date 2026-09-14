@@ -134,6 +134,10 @@ function installPricebookEnhancements(){
     script.id='pricebook-enhancements-script';
     script.src='./enhancements.js?v=20260914-quick1';
     doc.body.appendChild(script);
+    const uxScript=doc.createElement('script');
+    uxScript.id='pricebook-ux-169-script';
+    uxScript.src='./ux-1.6.9.js?v=20260914-1';
+    doc.body.appendChild(uxScript);
   }catch(e){}
 }
 const pricebookFrame=document.getElementById('appFrame');
