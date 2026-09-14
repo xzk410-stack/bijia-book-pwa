@@ -15,8 +15,8 @@ android {
         applicationId = "com.xzk410.spendbook"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "1.0.4"
+        versionCode = 6
+        versionName = "1.0.5"
     }
 
     if (
@@ -46,4 +46,5 @@ android {
 dependencies {
     implementation("androidx.activity:activity:1.10.0")
     implementation("androidx.browser:browser:1.9.0")
+    implementation("androidx.work:work-runtime:2.10.0")
 }
