@@ -117,7 +117,9 @@
     bindSelect('recordPackUnit', () => [...UNIT_DEFAULTS,...recordPackUnits()], '可搜尋；沒有的包裝單位可直接輸入新增');
     bindSelect('cmpPackUnit', () => [...UNIT_DEFAULTS,...recordPackUnits()], '可搜尋；沒有的包裝單位可直接輸入新增');
     bindSelect('quickUnit', () => [...UNIT_DEFAULTS,...productUnits()], '可搜尋；沒有的單位可直接輸入新增');
-    bindSelect('editProductUnit', () => [...UNIT_DEFAULTS,...productUnits()], '可搜尋；沒有的單位可直接輸入新增');
+    const editUnit=$('editProductUnit');
+    if(editUnit?.tagName==='SELECT') bindSelect('editProductUnit', () => [...UNIT_DEFAULTS,...productUnits()], '可搜尋；沒有的單位可直接輸入新增');
+    else bindTextInput('editProductUnit', () => [...UNIT_DEFAULTS,...productUnits()]);
     bindTextInput('newCategory', () => [...CATEGORY_DEFAULTS,...productCategories()]);
     bindTextInput('editProductCategory', () => [...CATEGORY_DEFAULTS,...productCategories()]);
   }
@@ -140,7 +142,7 @@
   }
 
   function version(){
-    document.querySelectorAll('.version-note').forEach(el=>{if(/比價簿\s*v/i.test(el.textContent||''))el.textContent='比價簿 v1.6.9';});
+    document.querySelectorAll('.version-note').forEach(el=>{if(/比價簿\s*v/i.test(el.textContent||''))el.textContent='比價簿 v1.6.10';});
   }
   install(); version();
   try{renderHome();}catch{}
