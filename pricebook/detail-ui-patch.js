@@ -110,9 +110,22 @@
     };
   }
 
-  function run(){ decorateDetail(); decorateRecordModal(); }
-  const mo=new MutationObserver(()=>setTimeout(run,0));
-  mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
-  document.addEventListener('click',()=>setTimeout(run,20),true);
-  setTimeout(run,120);
+  // Do not observe our own DOM writes; coalesce external changes into one task.
+  let pending = false;
+  const options = {subtree:true,childList:true,attributes:true,attributeFilter:['class']};
+  function schedule(){
+    if(pending)return;
+    pending=true;
+    setTimeout(run,30);
+  }
+  const mo=new MutationObserver(schedule);
+  function run(){
+    pending=false;
+    mo.disconnect();
+    try { decorateDetail(); decorateRecordModal(); }
+    finally { mo.observe(document.body,options); }
+  }
+  mo.observe(document.body,options);
+  document.addEventListener('click',schedule,true);
+  schedule();
 })();
