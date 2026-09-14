@@ -1,8 +1,10 @@
 package com.xzk410.spendbook;
 
+import android.Manifest;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -24,6 +26,12 @@ import android.window.OnBackInvokedDispatcher;
 import androidx.activity.ComponentActivity;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.browser.auth.AuthTabIntent;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import org.json.JSONObject;
 
@@ -31,15 +39,18 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends ComponentActivity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
+    private static final int NOTIFICATION_PERMISSION_REQUEST = 2002;
     private static final String START_URL = "https://xzk410-stack.github.io/bijia-book-pwa/spendbook/";
     private static final String APP_HOST = "xzk410-stack.github.io";
     private static final String APP_PATH_PREFIX = "/bijia-book-pwa/spendbook/";
     private static final String AUTH_REDIRECT_HOST = "save-radar-gold.vercel.app";
     private static final String AUTH_REDIRECT_PATH = "/login";
     private static final String AUTH_PREFS = "spendbook_auth_session";
+    private static final String REMINDER_WORK_NAME = "spendbook-native-deadline-reminders";
 
     private WebView webView;
     private FrameLayout root;
@@ -80,7 +91,7 @@ public class MainActivity extends ComponentActivity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
         settings.setTextZoom(100);
-        settings.setUserAgentString(settings.getUserAgentString() + " Spendbook/1.0.4 (Android)");
+        settings.setUserAgentString(settings.getUserAgentString() + " Spendbook/1.0.5 (Android)");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) settings.setSafeBrowsingEnabled(true);
 
         webView.setWebViewClient(new WebViewClient() {
@@ -130,6 +141,7 @@ public class MainActivity extends ComponentActivity {
 
         webView.loadUrl(START_URL);
         loadOAuthCallback(getIntent());
+        ensureReminderWork(false);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
@@ -226,6 +238,55 @@ public class MainActivity extends ComponentActivity {
         } catch (Exception e) { return false; }
     }
 
+    private void ensureReminderWork(boolean runNow) {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+        PeriodicWorkRequest periodic = new PeriodicWorkRequest.Builder(
+                ReminderWorker.class, 1, TimeUnit.HOURS, 15, TimeUnit.MINUTES)
+                .setConstraints(constraints)
+                .build();
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                REMINDER_WORK_NAME,
+                ExistingPeriodicWorkPolicy.UPDATE,
+                periodic);
+        if (runNow) {
+            OneTimeWorkRequest immediate = new OneTimeWorkRequest.Builder(ReminderWorker.class)
+                    .setConstraints(constraints)
+                    .build();
+            WorkManager.getInstance(this).enqueue(immediate);
+        }
+    }
+
+    private String enableNativeNotificationsInternal() {
+        ensureReminderWork(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            runOnUiThread(() -> requestPermissions(
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    NOTIFICATION_PERMISSION_REQUEST));
+            return "permission_required";
+        }
+        return "enabled";
+    }
+
+    private String testNativeNotificationInternal() {
+        if (!ReminderWorker.canNotify(this)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                runOnUiThread(() -> requestPermissions(
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        NOTIFICATION_PERMISSION_REQUEST));
+            }
+            return "permission_required";
+        }
+        runOnUiThread(() -> ReminderWorker.showSystemNotification(
+                MainActivity.this,
+                "通知測試成功",
+                "「我的消費簿」Android 背景通知已正常啟用。",
+                10501));
+        return "sent";
+    }
+
     private class AndroidBridge {
         @JavascriptInterface
         public void saveAuthSession(String accessToken, String refreshToken) {
@@ -235,6 +296,7 @@ public class MainActivity extends ComponentActivity {
                     .putString("access_token", accessToken)
                     .putString("refresh_token", refreshToken)
                     .apply();
+            ensureReminderWork(false);
         }
 
         @JavascriptInterface
@@ -258,6 +320,23 @@ public class MainActivity extends ComponentActivity {
         @JavascriptInterface
         public void openGoogleLogin(String url) {
             runOnUiThread(() -> launchGoogleAuthTab(url));
+        }
+
+        @JavascriptInterface
+        public boolean supportsNativeNotifications() {
+            return isTrustedSpendbookPage();
+        }
+
+        @JavascriptInterface
+        public String enableNativeNotifications() {
+            if (!isTrustedSpendbookPage()) return "unavailable";
+            return enableNativeNotificationsInternal();
+        }
+
+        @JavascriptInterface
+        public String testNativeNotification() {
+            if (!isTrustedSpendbookPage()) return "unavailable";
+            return testNativeNotificationInternal();
         }
 
         @JavascriptInterface
