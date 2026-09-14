@@ -31,7 +31,7 @@
         <div class="edit-grid">
           <div class="edit-field"><label>品牌</label><input id="editProductBrand"></div>
           <div class="edit-field"><label>分類</label><input id="editProductCategory" list="editProductCategoryList" placeholder="例如 日用品、清潔用品"><datalist id="editProductCategoryList"></datalist><div class="edit-hint">可直接輸入，也可從以前用過的分類中選擇。</div></div>
-          <div class="edit-field"><label>比較單位 *</label><select id="editProductUnit"></select></div>
+          <div class="edit-field"><label>比較單位 *</label><input id="editProductUnit" list="editProductUnitList" autocomplete="off" placeholder="例如 組、張、抽"><datalist id="editProductUnitList"></datalist><div class="edit-hint">可搜尋或直接輸入新的比較單位。</div></div>
           <div class="edit-field"><label>理想入手價</label><input id="editProductTargetPrice" type="number" min="0" step="0.01" inputmode="decimal"></div>
           <div class="edit-field"><label>理想價對應總數量</label><input id="editProductTargetQty" type="number" min="0" step="0.01" inputmode="decimal"></div>
         </div>
@@ -48,20 +48,21 @@
   modal.onclick = e => { if (e.target === modal) close(); };
 
   const defaultCategories = ['未分類','日用品','清潔用品','衛生用品','食品','飲料','美妝','保養','居家用品','寵物用品','3C','家電','服飾','母嬰','文具','其他'];
-  const defaultUnits = ['g','kg','ml','L','個','包','抽','片','顆','入','瓶','罐','盒','袋','卷','組','件','公尺','cm'];
+  const defaultUnits = ['組','張','抽','片','捲','個','包','袋','盒','箱','串','顆','入','瓶','罐','件','份','g','kg','ml','L','公尺','cm'];
   let editingPid = '';
   let originalUnit = '';
 
-  function fillSelect(select, values, current) {
-    select.innerHTML = '';
-    const all = Array.from(new Set([current, ...values].filter(Boolean)));
+  function fillSelect(input, values, current) {
+    const list = $('editProductUnitList');
+    const existing = (db?.products || []).map(x => String(x.unit || '').trim()).filter(Boolean);
+    const all = Array.from(new Set([current, ...existing, ...values].filter(Boolean)));
+    list.innerHTML = '';
     all.forEach(v => {
       const op = document.createElement('option');
       op.value = v;
-      op.textContent = v;
-      if (v === current) op.selected = true;
-      select.appendChild(op);
+      list.appendChild(op);
     });
+    input.value = current || '個';
   }
 
   function fillCategorySuggestions(current) {
