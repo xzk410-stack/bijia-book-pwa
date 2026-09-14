@@ -29,7 +29,7 @@ async function fetchCloudBundle(){
   const records=(rows||[]).map(r=>({
     name:r.name||'未命名商品',seller:r.seller||'未填寫',platform:r.platform||'其他',
     total:n(r.total_amount),paid:n(r.paid_amount),status:r.logistics_status||'尚未出貨',
-    shipdate:r.ship_date||'',paymethod:r.payment_method||'',note:r.note||'',
+    shipdate:r.ship_date||'',paymentDueDate:r.payment_due_date||'',paymethod:r.payment_method||'',note:r.note||'',
     payments:byRecord.get(r.id)||[],createdAt:dateMs(r.created_at)||Date.now()
   }));
   const newest=(rows||[]).reduce((m,r)=>r.updated_at&&r.updated_at>m?r.updated_at:m,'');
@@ -47,7 +47,7 @@ async function syncLocalToCloud(local){
     const r=local[i];let created=n(r.createdAt);if(!created){created=Date.now()+i;r.createdAt=created}
     while(usedCreated.has(created)&&!rowByCreated.has(created)){created++;r.createdAt=created}
     let dbRow=rowByCreated.get(created);
-    const common={name:r.name||'未命名商品',seller:r.seller||'未填寫',platform:r.platform||'其他',total_amount:Math.max(0,n(r.total)),logistics_status:r.status||'尚未出貨',ship_date:r.shipdate||null,payment_method:r.paymethod||'',note:r.note||''};
+    const common={name:r.name||'未命名商品',seller:r.seller||'未填寫',platform:r.platform||'其他',total_amount:Math.max(0,n(r.total)),logistics_status:r.status||'尚未出貨',ship_date:r.shipdate||null,payment_due_date:r.paymentDueDate||null,payment_method:r.paymethod||'',note:r.note||''};
     if(dbRow){const {data,error}=await db.from('spend_records').update(common).eq('id',dbRow.id).select('*').single();if(error)throw error;dbRow=data}else{const insert={...common,user_id:session.user.id,base_amount:Math.max(0,n(r.total)),second_amount:0,fee_amount:0,shipping_amount:0,discount_amount:0,paid_amount:0,created_at:new Date(created).toISOString()};const {data,error}=await db.from('spend_records').insert(insert).select('*').single();if(error)throw error;dbRow=data;rowByCreated.set(created,data);usedCreated.add(created)}
     const existingRows=paymentsByRecord.get(dbRow.id)||[];const existingKeys=new Set(existingRows.map(p=>paymentFingerprint({amount:p.amount,method:p.method,date:p.paid_on})));let existingTotal=existingRows.reduce((s,p)=>s+n(p.amount),0);
     for(const p of Array.isArray(r.payments)?r.payments:[]){const fp=paymentFingerprint(p);if(existingKeys.has(fp)||n(p.amount)<=0)continue;const pay={record_id:dbRow.id,user_id:session.user.id,amount:n(p.amount),method:p.method||r.paymethod||'',paid_on:p.date||new Date(created).toISOString().slice(0,10)};const {error}=await db.from('spend_payments').insert(pay);if(error)throw error;existingKeys.add(fp);existingTotal+=n(p.amount)}
