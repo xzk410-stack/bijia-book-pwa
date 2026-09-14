@@ -1,5 +1,5 @@
 const CACHE='spendbook-v8';
-const ASSETS=['./','./index.html','./manifest.webmanifest','./icon.svg','./cloud.js','./app.html','./status-filter-fix.js','./ui-finish.js'];
+const ASSETS=['./','./index.html','./manifest.webmanifest','./icon.svg','./cloud.js','./app.html','./deadline-reminder.js','./status-filter-fix.js','./ui-finish.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('spendbook-')&&k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim()});
 async function injectAppScripts(response){
