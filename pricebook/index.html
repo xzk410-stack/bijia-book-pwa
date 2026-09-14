@@ -30,6 +30,9 @@
 .account-fold summary{cursor:pointer;padding:6px 4px}
 .account-fold[open] #accountEmail{position:absolute;top:100%;left:0;z-index:50;background:white;border:1px solid #e7e2d8;border-radius:10px;padding:12px;max-width:85vw;box-shadow:0 5px 18px #0001}
 .tools button{box-shadow:none!important;padding:6px 9px!important;font-size:11px!important}
+</style><style id="pricebook-layout-fix-2">
+.account-fold{display:none!important}
+.topbar{justify-content:flex-end!important;min-height:38px!important}
 </style></head>
 <body>
 <div id="boot" class="boot" aria-label="比價簿載入中"><div class="bootbox"><div class="booticon">🔎</div><div class="bootdots"><i></i><i></i><i></i></div></div></div>
@@ -38,7 +41,7 @@
     <details class="account account-fold"><summary>帳號</summary><small id="accountEmail"></small></details>
     <div class="tools"><button id="cloudState" class="sync">雲端同步</button><button type="button" onclick="document.getElementById('backupFile').click()">匯入</button><button type="button" onclick="logout()">登出</button></div>
   </div>
-  <iframe id="appFrame" src="./app.html?v=final-polish-20260914-1" hidden title="比價簿"></iframe>
+  <iframe id="appFrame" src="./app.html?v=layout-fix-2-20260914" hidden title="比價簿"></iframe>
 </div>
 <section id="auth" class="auth hidden">
   <div class="card">
