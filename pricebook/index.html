@@ -39,6 +39,13 @@ html body .topbar .account-fold{display:none!important}
 html body .topbar .tools{display:flex!important;position:static!important;margin-left:auto!important;flex:0 0 auto!important;white-space:nowrap!important}
 html body .topbar .tools button{position:static!important;transform:none!important;animation:none!important}
 html body .topbar #cloudState{min-width:86px!important;text-align:center!important}
+</style><style id="pricebook-account-visible">
+html body .topbar{justify-content:space-between!important}
+html body .topbar .account-fold{display:flex!important;align-items:center!important;gap:7px!important;min-width:0!important;flex:1!important}
+html body .topbar .account-fold summary{display:block!important;padding:0!important;white-space:nowrap!important;font-size:11px!important;color:#68776e!important}
+html body .topbar .account-fold summary::-webkit-details-marker{display:none!important}
+html body .topbar .account-fold #accountEmail{display:block!important;position:static!important;max-width:180px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important;font-size:11px!important;color:#8b938e!important}
+html body .topbar .account-fold[open] #accountEmail{position:static!important}
 </style></head>
 <body>
 <div id="boot" class="boot" aria-label="比價簿載入中"><div class="bootbox"><div class="booticon">🔎</div><div class="bootdots"><i></i><i></i><i></i></div></div></div>
@@ -47,7 +54,7 @@ html body .topbar #cloudState{min-width:86px!important;text-align:center!importa
     <details class="account account-fold"><summary>帳號</summary><small id="accountEmail"></small></details>
     <div class="tools"><button id="cloudState" class="sync">雲端同步</button><button type="button" onclick="document.getElementById('backupFile').click()">匯入</button><button type="button" onclick="logout()">登出</button></div>
   </div>
-  <iframe id="appFrame" src="./app.html?v=layout-fix-3-20260914" hidden title="比價簿"></iframe>
+  <iframe id="appFrame" src="./app.html?v=account-visible-20260914" hidden title="比價簿"></iframe>
 </div>
 <section id="auth" class="auth hidden">
   <div class="card">
