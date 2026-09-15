@@ -936,6 +936,12 @@ function resetRecordEditorState(){
  if(seg)seg.style.display='grid';
  if(sel)sel.disabled=false;
 }
+function setUnitField(id,value){
+ const field=document.getElementById(id);
+ if(field.tagName==='SELECT'&&![...field.options].some(o=>o.value===value))field.add(new Option(value,value));
+ field.value=value;
+ field.dispatchEvent(new Event('change',{bubbles:true}));
+}
 function fillRecordForm(p,r){
  setAddMode('existing');
  document.getElementById('recordProduct').value=p.id;
@@ -948,7 +954,7 @@ function fillRecordForm(p,r){
  document.getElementById('exchangeField').style.display=(r.currency&&r.currency!=='TWD')?'grid':'none';
  document.getElementById('recordUnitSize').value=r.unitSize||'';
  document.getElementById('recordPackCount').value=r.packCount||'';
- document.getElementById('recordPackUnit').value=r.packUnit||'瓶';
+ setUnitField('recordPackUnit',r.packUnit||'件');
  document.getElementById('recordQty').value=r.qty||'';
  document.getElementById('recordSpec').value=r.spec||'';
  setTimeout(syncRecordPackageCalc,0);
@@ -975,7 +981,7 @@ function openRecordModal(pid=null){
  if(pid)document.getElementById('recordProduct').value=pid;
  document.getElementById('recordDate').value=today();
  ['recordStore','recordPrice','recordUnitSize','recordPackCount','recordQty','recordSpec','recordNote'].forEach(x=>document.getElementById(x).value='');
- document.getElementById('recordPackUnit').value='瓶';
+ setUnitField('recordPackUnit','瓶');
  document.getElementById('recordCalcPreview').classList.remove('show');
  ['newName','newBrand','newCategory','newBarcode','newTargetPrice','newTargetQty','newProductNote'].forEach(x=>{const el=document.getElementById(x);if(el)el.value=''});
  document.getElementById('recordCurrency').value='TWD';document.getElementById('recordExchange').value='';
@@ -1134,7 +1140,7 @@ function deleteProduct(pid){if(!confirm('會連同這個商品的所有價格紀
 function prefillCompare(){
  const p=getProduct(document.getElementById('cmpProduct').value);
  ['cmpQty','cmpPrice','cmpUnitSize','cmpPackCount','cmpSpec'].forEach(x=>document.getElementById(x).value='');
- document.getElementById('cmpPackUnit').value='瓶';
+ setUnitField('cmpPackUnit','瓶');
  document.getElementById('cmpCalcPreview').classList.remove('show');
  document.getElementById('compareResult').className='compare-result';document.getElementById('compareSaveActions').style.display='none';
 }

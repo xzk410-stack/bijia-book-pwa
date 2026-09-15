@@ -56,7 +56,7 @@
     const input = wrap.querySelector('input'), menu = wrap.querySelector('.pb-combo-menu');
     input.value = select.value || '';
 
-    const commit = value => {
+    const commit = (value, close = true) => {
       value = clean(value);
       if (!value) return;
       let option = [...select.options].find(o => clean(o.value).toLowerCase() === value.toLowerCase());
@@ -65,7 +65,7 @@
       input.value = option.value;
       select.dispatchEvent(new Event('input', {bubbles:true}));
       select.dispatchEvent(new Event('change', {bubbles:true}));
-      wrap.classList.remove('open');
+      if (close) wrap.classList.remove('open');
     };
     const render = () => {
       const q = clean(input.value).toLowerCase();
@@ -83,16 +83,16 @@
       wrap.classList.add('open');
     };
     input.addEventListener('focus', render);
-    input.addEventListener('input', render);
+    input.addEventListener('input', () => { commit(input.value, false); render(); });
     input.addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); commit(input.value); }
       if (e.key === 'Escape') wrap.classList.remove('open');
     });
     input.addEventListener('blur', () => setTimeout(() => {
-      if (clean(input.value)) commit(input.value); else input.value = select.value || '';
+      input.value = select.value || '';
       wrap.classList.remove('open');
     }, 120));
-    select.addEventListener('change', () => { if (document.activeElement !== input) input.value = select.value || ''; });
+    select.addEventListener('change', () => { input.value = select.value || ''; });
   }
 
   function bindTextInput(id, valuesFn){
