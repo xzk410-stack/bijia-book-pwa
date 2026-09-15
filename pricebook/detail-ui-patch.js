@@ -75,8 +75,8 @@
         const t=btn.textContent.replace(/\s+/g,' ').trim();
         if(t==='編輯') btn.textContent='編輯價格';
         else if(/更換截圖/.test(t)) btn.textContent='更換';
-        else if(/移除截圖/.test(t)) btn.textContent='移除';
-        else if(/查看截圖/.test(t)) btn.textContent='查看截圖';
+        else if(t==='移除') btn.textContent='移除截圖';
+        else if(/查看截圖/.test(t) && t!=='查看截圖') btn.textContent='查看截圖';
       });
       row.querySelectorAll('.receipt-actions').forEach(x=>{if(!x.children.length)x.remove();});
     });

@@ -105,7 +105,7 @@
       if(!doc.getElementById('pricebook-detail-ui-patch')){
         const script=doc.createElement('script');
         script.id='pricebook-detail-ui-patch';
-        script.src='./detail-ui-patch.js?v=20260914-detail1';
+        script.src='./detail-ui-patch.js?v=20260915-stable-actions';
         doc.body.appendChild(script);
       }
 
