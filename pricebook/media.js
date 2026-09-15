@@ -112,7 +112,7 @@
       if(!doc.getElementById('pricebook-ui-polish-patch')){
         const script=doc.createElement('script');
         script.id='pricebook-ui-polish-patch';
-        script.src='./ui-polish-patch.js?v=20260914-ui2';
+        script.src='./ui-polish-patch.js?v=20260915-single-menu';
         doc.body.appendChild(script);
       }
     }catch(e){}

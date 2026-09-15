@@ -45,7 +45,7 @@
     });
   }
   function install(id,type){
-    const input=$(id);if(!input||input.dataset.smart==='1')return;
+    const input=$(id);if(!input||input.dataset.smart==='1'||input.dataset.pbSuggest==='1')return;
     input.dataset.smart='1';input.dataset.pbSuggest='1';input.removeAttribute('list');input.autocomplete='off';
     removeLegacyPanels(input);
     const box=document.createElement('div');box.className='smart-suggest';input.insertAdjacentElement('afterend',box);
