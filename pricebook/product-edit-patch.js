@@ -32,8 +32,6 @@
           <div class="edit-field"><label>品牌</label><input id="editProductBrand"></div>
           <div class="edit-field"><label>分類</label><input id="editProductCategory" list="editProductCategoryList" placeholder="例如 日用品、清潔用品"><datalist id="editProductCategoryList"></datalist><div class="edit-hint">可直接輸入，也可從以前用過的分類中選擇。</div></div>
           <div class="edit-field"><label>比較單位 *</label><input id="editProductUnit" list="editProductUnitList" autocomplete="off" placeholder="例如 組、張、抽"><datalist id="editProductUnitList"></datalist><div class="edit-hint">可搜尋或直接輸入新的比較單位。</div></div>
-          <div class="edit-field"><label>理想入手價</label><input id="editProductTargetPrice" type="number" min="0" step="0.01" inputmode="decimal"></div>
-          <div class="edit-field"><label>理想價對應總數量</label><input id="editProductTargetQty" type="number" min="0" step="0.01" inputmode="decimal"></div>
         </div>
         <div class="edit-field full"><label>商品備註</label><textarea id="editProductNote"></textarea></div>
         <div class="unit-warning">比較單位是拿來統一比價的單位，例如 690g × 5罐，這裡應選「g」；「罐」是在價格紀錄的包裝單位裡填。</div>
@@ -86,8 +84,6 @@
     $('editProductName').value = p.name || '';
     $('editProductBrand').value = p.brand || '';
     $('editProductCategory').value = p.category || '未分類';
-    $('editProductTargetPrice').value = p.targetPrice || '';
-    $('editProductTargetQty').value = p.targetQty || '';
     $('editProductNote').value = p.note || '';
 
     fillCategorySuggestions(p.category || '未分類');
@@ -105,8 +101,8 @@
     p.brand = $('editProductBrand').value.trim();
     p.category = $('editProductCategory').value.trim() || '未分類';
     p.unit = $('editProductUnit').value || '個';
-    p.targetPrice = Number($('editProductTargetPrice').value) || 0;
-    p.targetQty = Number($('editProductTargetQty').value) || 0;
+    p.targetPrice = 0;
+    p.targetQty = 0;
     p.note = $('editProductNote').value.trim();
 
     saveDB('修改商品資料');
