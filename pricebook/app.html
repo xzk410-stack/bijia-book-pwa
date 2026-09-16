@@ -435,8 +435,6 @@ html body #homeView .home-heading #addBtn{bottom:88px!important;right:14px!impor
         <div class="field"><label>分類</label><input id="newCategory" list="categoryList" placeholder="日用品"></div>
         <div class="field"><label>比較單位 *</label><select id="newUnit"><option>個</option><option>包</option><option>抽</option><option>片</option><option>顆</option><option>入</option><option>瓶</option><option>罐</option><option>盒</option><option>ml</option><option>g</option><option>kg</option><option>L</option><option>公尺</option></select></div>
         <div class="field"><label>條碼／型號</label><div class="input-action"><input id="newBarcode" inputmode="numeric" placeholder="掃描或輸入條碼"><button class="btn soft" type="button" id="scanBarcodeInForm"><svg class="ui-icon"><use href="#i-camera"></use></svg>掃描</button></div></div>
-        <div class="field"><label>理想入手價</label><input id="newTargetPrice" type="number" inputmode="decimal" min="0" step="0.01" placeholder="例如 269"></div>
-        <div class="field"><label>理想價對應總數量</label><input id="newTargetQty" type="number" inputmode="decimal" min="0" step="0.01" placeholder="例如 1200"></div>
         <div class="field full"><label>商品備註</label><input id="newProductNote" placeholder="例如 固定買無香款"></div>
         <div class="field full"><label>商品照片（選填）</label><input id="newImage" type="file" accept="image/*"></div>
       </div>
@@ -571,7 +569,7 @@ function restoreBackup(bid){
    renderAll();toast('已還原備份 ✓');
  }catch(e){alert('這份備份無法讀取。')}
 }
-function targetUnitPrice(p){return p.targetPrice>0?(p.targetQty>0?p.targetPrice/p.targetQty:p.targetPrice):null}
+function targetUnitPrice(p){return null}
 function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function today(){return new Date().toISOString().slice(0,10)}
 function money(n){if(n==null||!isFinite(n))return '—';return 'NT$'+Math.round(n).toLocaleString('zh-TW')}
@@ -1016,7 +1014,7 @@ async function saveRecord(){
    const duplicate=bc?findProductByBarcode(bc):null;
    if(duplicate)return toast('這個條碼已經屬於「'+duplicate.name+'」');
    p={id:id(),name,brand:document.getElementById('newBrand').value.trim(),category:document.getElementById('newCategory').value.trim()||'未分類',
-      unit:document.getElementById('newUnit').value,barcode:bc,barcodes:bc?[bc]:[],targetPrice:Number(document.getElementById('newTargetPrice').value)||0,targetQty:Number(document.getElementById('newTargetQty').value)||0,note:document.getElementById('newProductNote').value.trim(),favorite:false,image,records:[]};
+      unit:document.getElementById('newUnit').value,barcode:bc,barcodes:bc?[bc]:[],targetPrice:0,targetQty:0,note:document.getElementById('newProductNote').value.trim(),favorite:false,image,records:[]};
    db.products.push(p);
  }else{
    p=getProduct(document.getElementById('recordProduct').value); if(!p)return toast('請先選商品');
@@ -1128,10 +1126,8 @@ function editProduct(pid){
  const brand=prompt('品牌',p.brand||'');if(brand===null)return;
  const category=prompt('分類',p.category||'未分類');if(category===null)return;
  const unit=prompt('比較單位（例如 ml、g、抽、個）',p.unit||'個');if(unit===null)return;
- const targetPrice=prompt('理想入手價（不設定可留空）',p.targetPrice||'');if(targetPrice===null)return;
- const targetQty=prompt('理想價對應的總數量（例如 1200 抽；固定規格可留空）',p.targetQty||'');if(targetQty===null)return;
  p.name=name.trim()||p.name;p.brand=brand.trim();p.category=category.trim()||'未分類';p.unit=unit.trim()||'個';
- p.targetPrice=Number(targetPrice)||0;p.targetQty=Number(targetQty)||0;
+ p.targetPrice=0;p.targetQty=0;
  saveDB('修改商品資料');openDetail(pid);toast('商品資料已更新');
 }
 function deleteRecord(pid,rid){if(!confirm('刪掉這筆價格紀錄？'))return;const p=getProduct(pid);p.records=p.records.filter(r=>r.id!==rid);saveDB('刪除價格紀錄');openDetail(pid)}
