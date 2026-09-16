@@ -49,7 +49,7 @@
     <div class="quick-choice-grid">
       <button class="quick-choice primary-choice" id="openQuickManual" type="button"><span class="quick-icon">⚡</span><span><b>快速記價格</b><small>商品、店家、數量、商品總額，幾秒就存好</small></span></button>
       <button class="quick-choice" id="openQuickOcr" type="button"><span class="quick-icon">🧾</span><span><b>從訂單截圖辨識</b><small>Android 新版可自動讀取蝦皮／購物訂單，再由你確認</small></span></button>
-      <button class="quick-choice" id="openFullRecord" type="button"><span class="quick-icon">✍️</span><span><b>完整新增</b><small>條碼、分類、包裝換算、理想價等完整資料</small></span></button>
+      <button class="quick-choice" id="openFullRecord" type="button"><span class="quick-icon">✍️</span><span><b>完整新增</b><small>條碼、分類、包裝換算等完整資料</small></span></button>
     </div>
   `);
 
