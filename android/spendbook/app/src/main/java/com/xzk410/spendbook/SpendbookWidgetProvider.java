@@ -23,6 +23,12 @@ public class SpendbookWidgetProvider extends AppWidgetProvider {
     static final String PREFS = "spendbook_widget_cache";
     static final String WORK_NAME = "spendbook-widget-refresh";
 
+    private static final Class<?>[] WIDGET_PROVIDERS = new Class<?>[] {
+            SpendbookWidgetProvider.class,
+            SpendbookWidgetMediumProvider.class,
+            SpendbookWidgetLargeProvider.class
+    };
+
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
         for (int id : appWidgetIds) render(context, manager, id);
@@ -54,9 +60,11 @@ public class SpendbookWidgetProvider extends AppWidgetProvider {
 
     static void renderAll(Context context) {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
-        ComponentName component = new ComponentName(context, SpendbookWidgetProvider.class);
-        int[] ids = manager.getAppWidgetIds(component);
-        for (int id : ids) render(context, manager, id);
+        for (Class<?> provider : WIDGET_PROVIDERS) {
+            ComponentName component = new ComponentName(context, provider);
+            int[] ids = manager.getAppWidgetIds(component);
+            for (int id : ids) render(context, manager, id);
+        }
     }
 
     private static void render(Context context, AppWidgetManager manager, int appWidgetId) {
