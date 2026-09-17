@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">我的消費簿</string>
+    <string name="widget_name_small">我的消費簿・精簡</string>
+    <string name="widget_name_medium">我的消費簿・提醒</string>
+    <string name="widget_name_large">我的消費簿・完整</string>
     <string name="widget_description">快速查看本月與今日支出、待取貨／待付款／待出貨提醒，並直接記一筆。</string>
+    <string name="widget_description_small">精簡版：本月支出、今天支出與快速記一筆。</string>
+    <string name="widget_description_medium">提醒版：本月／今天支出、待取貨、待付款與快速記一筆。</string>
+    <string name="widget_description_large">完整版：加入待出貨與近期提醒，一眼查看重要待辦。</string>
 </resources>
