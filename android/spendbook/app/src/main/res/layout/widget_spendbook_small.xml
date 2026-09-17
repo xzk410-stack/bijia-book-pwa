@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_background"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="👜 我的消費簿"
+        android:textColor="#2E2926"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:singleLine="true" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/widget_month_block"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="本月" android:textColor="#86766D" android:textSize="10sp" />
+            <TextView android:id="@+id/widget_month_amount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$0" android:textColor="#27221F" android:textSize="17sp" android:textStyle="bold" android:singleLine="true" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/widget_today_block"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="今天" android:textColor="#86766D" android:textSize="10sp" />
+            <TextView android:id="@+id/widget_today_amount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$0" android:textColor="#B36F4F" android:textSize="17sp" android:textStyle="bold" android:singleLine="true" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_add"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:background="@drawable/widget_accent"
+        android:gravity="center"
+        android:text="＋ 記一筆"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+</LinearLayout>

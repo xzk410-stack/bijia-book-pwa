@@ -10,8 +10,15 @@
         android:theme="@style/AppTheme"
         android:enableOnBackInvokedCallback="true"
         android:usesCleartextTraffic="false">
+
         <activity
             android:name=".MainActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".WidgetAwareMainActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:screenOrientation="portrait">
@@ -26,5 +33,16 @@
                 <data android:scheme="spendbook" android:host="auth-callback" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".SpendbookWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/spendbook_widget_info" />
+        </receiver>
     </application>
 </manifest>

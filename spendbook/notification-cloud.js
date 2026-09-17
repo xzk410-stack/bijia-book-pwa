@@ -67,3 +67,44 @@ function removeSpendbookTestNotificationUi(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',removeSpendbookTestNotificationUi,{once:true});
 else removeSpendbookTestNotificationUi();
+
+function handleSpendbookWidgetAction(){
+  const params=new URLSearchParams(location.search);
+  const action=(params.get('widget_action')||'').trim();
+  if(!action)return;
+  const allowed=new Set(['add','pickup','payment','shipping','reminder','month','today','records']);
+  if(!allowed.has(action))return;
+  const frame=document.getElementById('appFrame');
+  if(!frame)return;
+  let tries=0;
+  const apply=()=>{
+    tries++;
+    try{
+      const w=frame.contentWindow;
+      if(w&&typeof w.go==='function'){
+        if(action==='add')w.go('add');
+        else{
+          if(typeof w.setFilter==='function'){
+            if(action==='pickup')w.setFilter('待取貨');
+            else if(action==='payment')w.setFilter('待付款');
+            else if(action==='shipping')w.setFilter('待出貨');
+            else w.setFilter('全部');
+          }
+          w.go('records');
+        }
+        const cleanUrl=new URL(location.href);
+        cleanUrl.searchParams.delete('widget_action');
+        history.replaceState({},'',cleanUrl.pathname+(cleanUrl.search||'')+(cleanUrl.hash||''));
+        return true;
+      }
+    }catch{}
+    return false;
+  };
+  if(apply())return;
+  const timer=setInterval(()=>{
+    if(apply()||tries>40)clearInterval(timer);
+  },250);
+  frame.addEventListener('load',()=>setTimeout(apply,0),{once:true});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',handleSpendbookWidgetAction,{once:true});
+else handleSpendbookWidgetAction();
