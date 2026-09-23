@@ -1276,7 +1276,18 @@ document.getElementById('clearSearch').onclick=()=>{document.getElementById('sea
 document.getElementById('sortBtn').onclick=()=>{sortMode=sortMode==='updated'?'name':sortMode==='name'?'low':'updated';document.getElementById('sortBtn').textContent=sortMode==='updated'?'最近更新 ↓':sortMode==='name'?'名稱 A→Z':'最低單價 ↑';renderProducts()};
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>switchView(b.dataset.view));
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
-document.querySelectorAll('.modal').forEach(m=>m.onclick=async e=>{if(e.target===m){if(m.id==='webScannerModal')await stopWebBarcodeScanner();closeModal(m.id)}});
+document.querySelectorAll('.modal').forEach(m=>{
+ let pointerStartedOnBackdrop=false;
+ m.addEventListener('pointerdown',e=>{pointerStartedOnBackdrop=e.target===m});
+ m.onclick=async e=>{
+   const shouldClose=e.target===m&&pointerStartedOnBackdrop;
+   pointerStartedOnBackdrop=false;
+   if(shouldClose){
+     if(m.id==='webScannerModal')await stopWebBarcodeScanner();
+     closeModal(m.id);
+   }
+ };
+});
 document.getElementById('existingMode').onclick=()=>setAddMode('existing');
 document.getElementById('newMode').onclick=()=>setAddMode('new');
 document.getElementById('saveRecord').onclick=saveRecord;

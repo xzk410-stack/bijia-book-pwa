@@ -1,4 +1,4 @@
-const VERSION='tripmate-live-20260914-r1';
+const VERSION='tripmate-live-20260923-r2';
 const SCOPE_PATH='/bijia-book-pwa/tripmate-live/';
 
 self.addEventListener('install',event=>{
