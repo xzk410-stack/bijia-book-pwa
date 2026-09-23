@@ -282,7 +282,40 @@ html body #homeView .home-heading #addBtn svg{width:18px!important;height:18px!i
 </style><style id="pricebook-layout-fix-2">
 html body .app>header{padding-top:16px!important}
 html body #homeView .home-heading #addBtn{bottom:88px!important;right:14px!important}
-</style></head>
+</style><style id="desktop-web-polish-pricebook">
+@media (min-width:900px){
+  .app{max-width:1120px;padding-bottom:102px}
+  header{padding:28px 30px 16px}
+  main{padding:18px 30px 38px}
+  .hero{padding:23px 24px}
+  .toolbar{overflow:visible;flex-wrap:wrap}
+  .list{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:stretch}
+  .product{height:100%}
+  nav{
+    width:min(1120px,calc(100% - 48px));
+    border:1px solid var(--line);border-bottom:0;
+    border-radius:18px 18px 0 0;
+    box-shadow:0 -8px 28px rgba(45,76,59,.055)
+  }
+  .fab{right:max(30px,calc((100vw - 1120px)/2 + 30px));bottom:94px}
+  .modal{align-items:center;padding:28px}
+  .sheet{
+    width:min(760px,calc(100% - 56px));
+    max-height:84vh;
+    border-radius:24px;
+    padding:22px 24px;
+    box-shadow:0 22px 60px rgba(0,0,0,.18)
+  }
+  .sheet-head{top:-22px}
+  .summary4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .webshops{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media (hover:hover) and (pointer:fine){
+  .product,.panel,.webshop,.btn,.navbtn{transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease}
+  .product:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(45,76,59,.08)}
+}
+</style>
+</head>
 <body>
 
 <svg class="svg-sprite" aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">

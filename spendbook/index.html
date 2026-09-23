@@ -16,6 +16,16 @@
 .migration{margin-top:14px;border:1px solid #e6eae7;border-radius:14px;background:#fafbfa;overflow:hidden}.migration summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;cursor:pointer;font-size:12px;font-weight:800;color:#596660}.migration summary::-webkit-details-marker{display:none}.migration summary:after{content:"＋";font-size:17px;line-height:1;color:#819087}.migration[open] summary:after{content:"－"}.migrationBody{border-top:1px solid #edf0ed;padding:11px 12px 12px}.migrationBody p{font-size:11px;color:#7b837e;line-height:1.55;margin:0 0 9px}.minirow{display:grid;grid-template-columns:1fr;gap:8px}.minirow button{display:flex;align-items:center;justify-content:center;border:1px solid #dfe4e1;background:#fff;color:#505d57;border-radius:12px;padding:9px;font-size:12px;font-weight:750}.syncStatus{font-size:11px;color:#7b837e;margin-top:8px;text-align:center}.legal{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:13px;font-size:11px}.legal a{color:#6a746f;text-decoration:none;font-weight:700}
 @media(max-width:520px){.auth{padding-left:14px;padding-right:14px}.card{padding:19px 18px;border-radius:23px}.icon{width:60px;height:60px;border-radius:19px}.icon img{width:45px;height:45px}.brand h1{font-size:24px}.brand{margin-bottom:14px}.topbar{padding:8px 10px}.account small{max-width:170px}.tools button{padding:7px 8px;font-size:11px}}
 </style>
+<style id="desktop-shell-polish-spendbook">
+@media (min-width:900px){
+  .topbar{
+    padding-left:max(20px,calc((100vw - 1040px)/2 + 20px));
+    padding-right:max(20px,calc((100vw - 1040px)/2 + 20px));
+  }
+  .auth{padding-top:40px;padding-bottom:40px}
+  .card{width:min(470px,100%);padding:26px}
+}
+</style>
 </head>
 <body>
 <div id="boot" class="boot" aria-label="我的消費簿載入中"><div class="bootbox"><div class="booticon"><img src="./icon.svg" alt=""></div><div class="bootdots"><i></i><i></i><i></i></div></div></div>
