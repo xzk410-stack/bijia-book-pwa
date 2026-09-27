@@ -1,5 +1,5 @@
-const CACHE='spendbook-v9';
-const ASSETS=['./','./index.html','./manifest.webmanifest','./icon.svg','./cloud.js','./notification-cloud.js','./app.html','./deadline-reminder.js','./status-filter-fix.js','./ui-finish.js'];
+const CACHE='spendbook-v10';
+const ASSETS=['../local-sync-state.js?v=20260927','./','./index.html','./manifest.webmanifest','./icon.svg','./cloud.js?v=sync-safety-20260927','./notification-cloud.js','./app.html','./deadline-reminder.js','./status-filter-fix.js','./ui-finish.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('spendbook-')&&k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim()});
 async function injectAppScripts(response){
@@ -18,7 +18,7 @@ self.addEventListener('fetch',e=>{
     const raw=await fetch(e.request,{cache:'no-store'});
     const response=isApp?await injectAppScripts(raw):raw;
     const c=response.clone();
-    caches.open(CACHE).then(x=>x.put(e.request,c));
+    if(response.ok)caches.open(CACHE).then(x=>x.put(e.request,c));
     return response;
   };
   if(e.request.mode==='navigate'){

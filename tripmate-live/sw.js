@@ -1,4 +1,4 @@
-const VERSION='tripmate-live-20260923-r2';
+const VERSION='tripmate-live-20260927-r1';
 const SCOPE_PATH='/bijia-book-pwa/tripmate-live/';
 
 self.addEventListener('install',event=>{
@@ -8,16 +8,7 @@ self.addEventListener('install',event=>{
 self.addEventListener('activate',event=>{
   event.waitUntil((async()=>{
     await self.clients.claim();
-    const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-    for(const client of windows){
-      try{
-        const url=new URL(client.url);
-        if(url.origin!==self.location.origin||!url.pathname.startsWith(SCOPE_PATH))continue;
-        if(url.searchParams.get('__tripmate_rev')===VERSION)continue;
-        url.searchParams.set('__tripmate_rev',VERSION);
-        await client.navigate(url.href);
-      }catch(_){ }
-    }
+
   })());
 });
 
